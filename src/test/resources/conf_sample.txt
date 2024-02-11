@@ -1,0 +1,36 @@
+width=40
+height=40
+space=1
+
+Keys:
+
+Pause P
+Inv Esc
+Pist 1
+Shotg 2
+Eagle 3
+Uzis 4
+SMed 8 height=0.5
+LMed 9 height=0.5
+
+Save F5 height=0.5
+Load F6 height=0.5
+Dash /
+Duck .
+Ctrl RCtrl
+↑ Up
+Walk Rshift
+Flare ,
+
+SLeft Delete
+Walk Lshift
+Look Num0
+← Left
+↓ Down
+→ Right
+Roll End
+
+RStep PageDown
+Ctrl LCtrl
+Jump LAlt
+Guns Space width=4
