@@ -2,6 +2,7 @@ package ch.jalu.nohboardconfiggen;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.function.Supplier;
 
 /**
  * Utilities for numbers.
@@ -30,6 +31,31 @@ public final class NumberUtils {
      */
     public static int multiply(int a, BigDecimal b) {
         BigDecimal resultPrecise = BigDecimal.valueOf(a).multiply(b);
-        return resultPrecise.setScale(0, RoundingMode.HALF_UP).intValueExact();
+        return roundToInt(resultPrecise);
+    }
+
+    /**
+     * Rounds the given BigDecimal to an integer and returns it as int.
+     *
+     * @param value the value to round
+     * @return properly rounded integer
+     */
+    public static int roundToInt(BigDecimal value) {
+        return value.setScale(0, RoundingMode.HALF_UP).intValueExact();
+    }
+
+    /**
+     * Converts the given String to a BigDecimal, throwing an error if not possible.
+     *
+     * @param number the string to convert
+     * @param errorSupplier error message supplier in case the string is invalid
+     * @return the string as BigDecimal
+     */
+    public static BigDecimal parseBigDecimalOrThrow(String number, Supplier<String> errorSupplier) {
+        try {
+            return new BigDecimal(number);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(errorSupplier.get());
+        }
     }
 }

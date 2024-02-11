@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.math.BigDecimal;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -15,9 +14,9 @@ public class KeyDefinition {
 
     private String text;
     private Set<KeyCode> keys = EnumSet.noneOf(KeyCode.class);
-    private BigDecimal customHeight;
-    private BigDecimal customWidth;
-    private BigDecimal marginTop;
-    private BigDecimal marginLeft;
+    private ValueWithUnit customHeight;
+    private ValueWithUnit customWidth;
+    private ValueWithUnit marginTop;
+    private ValueWithUnit marginLeft;
 
 }

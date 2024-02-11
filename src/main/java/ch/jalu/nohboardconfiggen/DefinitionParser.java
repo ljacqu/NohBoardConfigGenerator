@@ -4,6 +4,8 @@ import ch.jalu.nohboardconfiggen.definition.KeyCode;
 import ch.jalu.nohboardconfiggen.definition.KeyDefinition;
 import ch.jalu.nohboardconfiggen.definition.KeyboardConfig;
 import ch.jalu.nohboardconfiggen.definition.KeyboardRow;
+import ch.jalu.nohboardconfiggen.definition.Unit;
+import ch.jalu.nohboardconfiggen.definition.ValueWithUnit;
 import com.google.common.primitives.Ints;
 
 import java.io.IOException;
@@ -12,11 +14,12 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DefinitionParser {
 
-    private static final Pattern PROPERTY_DEFINITION_PATTERN = Pattern.compile("(\\w+)=(\\d+(\\.\\d+)?)");
+    private static final Pattern PROPERTY_DEFINITION_PATTERN = Pattern.compile("(\\w+)=(\\d+(\\.\\d+)?)(\\w+)?");
 
     public KeyboardConfig parseConfig(Path file) {
         List<String> lines = readAllLines(file);
@@ -29,8 +32,9 @@ public class DefinitionParser {
         for (String line : lines) {
             line = line.trim();
             if (!hasKey) {
-                if (PROPERTY_DEFINITION_PATTERN.matcher(line).matches()) {
-                    processConfigLine(line, config);
+                Matcher propertyDefinitionMatcher = PROPERTY_DEFINITION_PATTERN.matcher(line);
+                if (propertyDefinitionMatcher.matches()) {
+                    processIntProperty(line, config, propertyDefinitionMatcher);
                 } else if (line.equals("Keys:")) {
                     hasKey = true;
                 } else if (!line.isEmpty()) {
@@ -47,7 +51,6 @@ public class DefinitionParser {
         }
         config.getRows().add(row);
 
-        // todo: find better way to add rows
         config.getRows().removeIf(configRow -> configRow.getKeys().isEmpty());
         if (config.getRows().isEmpty()) {
             throw new IllegalArgumentException("No rows defined for keyboard");
@@ -60,8 +63,9 @@ public class DefinitionParser {
         KeyDefinition key = new KeyDefinition();
         key.setText(lineParts[0]);
         for (int i = 1; i < lineParts.length; ++i) {
-            if (PROPERTY_DEFINITION_PATTERN.matcher(lineParts[i]).matches()) {
-                processConfigStatement(lineParts[i], key, line);
+            Matcher propertyDefinitionMatcher = PROPERTY_DEFINITION_PATTERN.matcher(lineParts[i]);
+            if (propertyDefinitionMatcher.matches()) {
+                processPropertyForKey(key, line, propertyDefinitionMatcher);
             } else {
                 key.getKeys().add(KeyCode.getEntryOrThrow(lineParts[i]));
             }
@@ -72,64 +76,58 @@ public class DefinitionParser {
         return key;
     }
 
-    private void processConfigLine(String line, KeyboardConfig config) {
-        Property<Integer> property = parseIntConfigValue(line);
-        switch (property.name()) {
+    private void processIntProperty(String line, KeyboardConfig config, Matcher propertyDefinitionMatcher) {
+        String propertyName = propertyDefinitionMatcher.group(1);
+        Integer value = Ints.tryParse(propertyDefinitionMatcher.group(2));
+        if (value == null) {
+            throw new IllegalArgumentException("Invalid value '" + propertyDefinitionMatcher.group(2)
+                + "' found, expected integer. Full line: " + line);
+        }
+        String unitInput = propertyDefinitionMatcher.group(4);
+        if (unitInput != null) {
+            Unit unit = Unit.fromSymbolOrDefaultIfNull(unitInput);
+            if (unit != Unit.PIXEL) {
+                throw new IllegalArgumentException("Found invalid unit; expected pixels. Line: " + line);
+            }
+        }
+
+        switch (propertyName) {
             case "width":
-                config.setWidth(property.value());
+                config.setWidth(value);
                 break;
             case "height":
-                config.setHeight(property.value());
+                config.setHeight(value);
                 break;
             case "space":
-                config.setSpace(property.value());
+                config.setSpace(value);
                 break;
             default:
-                throw new IllegalArgumentException("Unknown property '" + property.name() + "' in line: " + line);
+                throw new IllegalArgumentException("Unknown property '" + propertyName + "' in line: " + line);
         }
     }
 
-    private void processConfigStatement(String textToParse, KeyDefinition key, String fullLine) {
-        Property<BigDecimal> property = parseBigDecimalConfigValue(textToParse);
-        switch (property.name()) {
+    private void processPropertyForKey(KeyDefinition key, String fullLine, Matcher propertyDefinitionMatcher) {
+        String propertyName = propertyDefinitionMatcher.group(1);
+        BigDecimal value = NumberUtils.parseBigDecimalOrThrow(propertyDefinitionMatcher.group(2),
+            () -> "Invalid number for property '" + propertyName + "' in line '" + fullLine + "'");
+        String unitSpecifier = propertyDefinitionMatcher.group(4);
+        Unit unit = Unit.fromSymbolOrDefaultIfNull(unitSpecifier);
+
+        switch (propertyName) {
             case "width":
-                key.setCustomWidth(property.value);
+                key.setCustomWidth(new ValueWithUnit(value, unit));
                 break;
             case "height":
-                key.setCustomHeight(property.value);
+                key.setCustomHeight(new ValueWithUnit(value, unit));
                 break;
             case "marginTop":
-                key.setMarginTop(property.value);
+                key.setMarginTop(new ValueWithUnit(value, unit));
                 break;
             case "marginLeft":
-                key.setMarginLeft(property.value);
+                key.setMarginLeft(new ValueWithUnit(value, unit));
                 break;
             default:
-                throw new IllegalArgumentException("Unknown property '" + property.name + "' in line: " + fullLine);
-        }
-    }
-
-    private Property<Integer> parseIntConfigValue(String line) {
-        String[] parts = line.split("=");
-        if (parts.length != 2) {
-            throw new IllegalArgumentException("Invalid line: " + line);
-        }
-        Integer num = Ints.tryParse(parts[1]);
-        if (num == null) {
-            throw new IllegalArgumentException("Expected numerical value in line: " + line);
-        }
-        return new Property<>(parts[0], num);
-    }
-
-    private Property<BigDecimal> parseBigDecimalConfigValue(String line) {
-        String[] parts = line.split("=");
-        if (parts.length != 2) {
-            throw new IllegalArgumentException("Invalid line: " + line);
-        }
-        try {
-            return new Property<>(parts[0], new BigDecimal(parts[1]));
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Expected numerical value in line: " + line);
+                throw new IllegalArgumentException("Unknown property '" + propertyName + "' in line: " + fullLine);
         }
     }
 
@@ -139,9 +137,5 @@ public class DefinitionParser {
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to read " + file, e);
         }
-    }
-
-    private record Property<T>(String name, T value) {
-
     }
 }

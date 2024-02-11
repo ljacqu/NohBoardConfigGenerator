@@ -1,17 +1,16 @@
 package ch.jalu.nohboardconfiggen.config;
 
 import ch.jalu.nohboardconfiggen.ConfigHelper;
-import ch.jalu.nohboardconfiggen.NumberUtils;
 import ch.jalu.nohboardconfiggen.definition.KeyCode;
 import ch.jalu.nohboardconfiggen.definition.KeyDefinition;
 import ch.jalu.nohboardconfiggen.definition.KeyboardConfig;
 import ch.jalu.nohboardconfiggen.definition.KeyboardRow;
+import ch.jalu.nohboardconfiggen.definition.Unit;
+import ch.jalu.nohboardconfiggen.definition.ValueWithUnit;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import static ch.jalu.nohboardconfiggen.NumberUtils.multiply;
 
 public class NohboardConfigGenerator {
 
@@ -35,21 +34,12 @@ public class NohboardConfigGenerator {
             int yMaxInCurrentRow = 0;
             xCurrentCell = KEYBOARD_SURFACE_MARGIN;
             for (KeyDefinition keyDefinition : row.getKeys()) {
-                int yTopLeftCurrentCell = yCurrentRowTop;
-                if (keyDefinition.getMarginTop() != null) {
-                    yTopLeftCurrentCell = yCurrentRowTop
-                        + multiply(config.getHeight(), keyDefinition.getMarginTop())
-                        + (keyDefinition.getMarginTop().intValue() * config.getSpace());
-                }
-                if (keyDefinition.getMarginLeft() != null) {
-                    xCurrentCell = xCurrentCell
-                        + multiply(config.getWidth(), keyDefinition.getMarginLeft())
-                        + keyDefinition.getMarginLeft().intValue() * config.getSpace();
-                }
+                NohbCoords topLeftPosition =
+                    calculateTopLeftPosition(xCurrentCell, yCurrentRowTop, keyDefinition, config);
 
                 NohbElement element = new NohbElement();
                 element.setTexts(keyDefinition.getText());
-                element.setBoundaries(calculateBounds(xCurrentCell, yTopLeftCurrentCell, config, keyDefinition));
+                element.setBoundaries(calculateBounds(topLeftPosition, config, keyDefinition));
                 element.setTextPosition(ConfigHelper.calculateCenterTextPosition(element.getBoundaries()));
                 List<NohbElement> elementsForKey = generateElementsForAllKeys(element, keyDefinition.getKeys());
                 elements.addAll(elementsForKey);
@@ -69,6 +59,28 @@ public class NohboardConfigGenerator {
         return elements;
     }
 
+    private NohbCoords calculateTopLeftPosition(int xCurrentCell, int yCurrentRowTop,
+                                                KeyDefinition keyDefinition, KeyboardConfig config) {
+        ValueWithUnit marginLeft = keyDefinition.getMarginLeft();
+        if (marginLeft != null) {
+            xCurrentCell += marginLeft.resolveToPixels(config.getWidth());
+            if (marginLeft.unit() == Unit.KEY) {
+                xCurrentCell += marginLeft.value().intValue() * config.getSpace();
+            }
+        }
+
+        int yTopLeftCurrentCell = yCurrentRowTop;
+        ValueWithUnit marginTop = keyDefinition.getMarginTop();
+        if (marginTop != null) {
+            yTopLeftCurrentCell += marginTop.resolveToPixels(config.getHeight());
+            if (marginTop.unit() == Unit.KEY) {
+                yTopLeftCurrentCell += marginTop.value().intValue() * config.getSpace();
+            }
+        }
+
+        return new NohbCoords(xCurrentCell, yTopLeftCurrentCell);
+    }
+
     private List<NohbElement> generateElementsForAllKeys(NohbElement template, Set<KeyCode> keys) {
         if (keys.size() == 1) {
             template.setKeyCodes(keys.stream().map(KeyCode::getCode).toList());
@@ -84,19 +96,27 @@ public class NohboardConfigGenerator {
         return elements;
     }
 
-    private List<NohbCoords> calculateBounds(int curX, int curY, KeyboardConfig config, KeyDefinition key) {
-        int xIncr = NumberUtils.notNullAndNotZero(key.getCustomWidth())
-            ? multiply(config.getWidth(), key.getCustomWidth())
+    private List<NohbCoords> calculateBounds(NohbCoords topLeftPosition, KeyboardConfig config, KeyDefinition key) {
+        int xIncrement = key.getCustomWidth() != null
+            ? key.getCustomWidth().resolveToPixels(config.getWidth())
             : config.getWidth();
-        int yIncr = NumberUtils.notNullAndNotZero(key.getCustomHeight())
-            ? multiply(config.getHeight(), key.getCustomHeight())
+        int yIncrement = key.getCustomHeight() != null
+            ? key.getCustomHeight().resolveToPixels(config.getHeight())
             : config.getHeight();
 
-        NohbCoords coords1 = new NohbCoords(curX, curY);
-        NohbCoords coords2 = new NohbCoords(curX + xIncr, curY);
-        NohbCoords coords3 = new NohbCoords(curX + xIncr, curY + yIncr);
-        NohbCoords coords4 = new NohbCoords(curX, curY + yIncr);
-        return List.of(coords1, coords2, coords3, coords4);
+        int leftX = topLeftPosition.getX();
+        int topY = topLeftPosition.getY();
+        int rightX = leftX + xIncrement;
+        int bottomY = topY + yIncrement;
+
+        // The order of the bounds is relevant; NohBoard has them in the following order:
+        // 0  1
+        // 3  2
+        return List.of(
+            new NohbCoords(leftX, topY),
+            new NohbCoords(rightX, topY),
+            new NohbCoords(rightX, bottomY),
+            new NohbCoords(leftX, bottomY));
     }
 
     private void setHeightAndWidth(NohbConfiguration config) {

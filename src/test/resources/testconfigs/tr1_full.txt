@@ -1,3 +1,6 @@
+width=40
+height=40
+
 Keys:
 Inv Esc
 Save F5
@@ -15,4 +18,4 @@ Walk S
 Jmp D
 Actn F
 Guns Space marginLeft=0.2 width=1.5
-Look NumPad0 width=1.5
+Look NumPad0 width=61px
