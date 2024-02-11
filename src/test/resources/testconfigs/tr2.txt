@@ -1,0 +1,30 @@
+width=43
+height=40
+
+$small=28px
+$keyWidth=38px
+
+Keys:
+1 1 width=$small height=$small
+2 2 width=$small height=$small
+3 3 width=$small height=$small
+4 4 width=$small height=$small marginLeft=2px
+6 6 width=$small height=$small
+7 7 width=$small height=$small
+
+Inv Esc
+LStp W
+RStp E
+Roll R
+
+Flare A
+Walk S RShift
+Jmp D RAlt
+Actn F RCtrl
+↑ Up width=$keyWidth marginLeft=49px
+
+Guns Space width=2
+Look NumPad0 width=2
+← Left width=$keyWidth marginLeft=10px
+↓ Down width=$keyWidth
+→ Right width=$keyWidth

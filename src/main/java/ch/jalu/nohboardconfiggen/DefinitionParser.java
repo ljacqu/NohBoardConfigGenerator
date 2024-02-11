@@ -13,13 +13,17 @@ import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DefinitionParser {
 
     private static final Pattern PROPERTY_DEFINITION_PATTERN = Pattern.compile("(\\w+)=(\\d+(\\.\\d+)?)(\\w+)?");
+
+    private final Map<String, String> variables = new HashMap<>();
 
     public KeyboardConfig parseConfig(Path file) {
         List<String> lines = readAllLines(file);
@@ -35,6 +39,8 @@ public class DefinitionParser {
                 Matcher propertyDefinitionMatcher = PROPERTY_DEFINITION_PATTERN.matcher(line);
                 if (propertyDefinitionMatcher.matches()) {
                     processIntProperty(line, config, propertyDefinitionMatcher);
+                } else if (line.startsWith("$")) {
+                    processVariable(line);
                 } else if (line.equals("Keys:")) {
                     hasKey = true;
                 } else if (!line.isEmpty()) {
@@ -63,11 +69,12 @@ public class DefinitionParser {
         KeyDefinition key = new KeyDefinition();
         key.setText(lineParts[0]);
         for (int i = 1; i < lineParts.length; ++i) {
-            Matcher propertyDefinitionMatcher = PROPERTY_DEFINITION_PATTERN.matcher(lineParts[i]);
+            String linePart = replaceVariables(lineParts[i]);
+            Matcher propertyDefinitionMatcher = PROPERTY_DEFINITION_PATTERN.matcher(linePart);
             if (propertyDefinitionMatcher.matches()) {
                 processPropertyForKey(key, line, propertyDefinitionMatcher);
             } else {
-                key.getKeys().add(KeyCode.getEntryOrThrow(lineParts[i]));
+                key.getKeys().add(KeyCode.getEntryOrThrow(linePart));
             }
         }
         if (key.getKeys().isEmpty()) {
@@ -129,6 +136,25 @@ public class DefinitionParser {
             default:
                 throw new IllegalArgumentException("Unknown property '" + propertyName + "' in line: " + fullLine);
         }
+    }
+
+    private void processVariable(String line) {
+        String[] lineParts = line.split("=");
+        if (lineParts.length != 2) {
+            throw new IllegalArgumentException("Invalid line '" + line + "'");
+        }
+        variables.put(lineParts[0], lineParts[1]);
+    }
+
+    private String replaceVariables(String text) {
+        if (text.indexOf('$') >= 0) {
+            String result = text;
+            for (Map.Entry<String, String> variableByNameAndValue : variables.entrySet()) {
+                result = result.replace(variableByNameAndValue.getKey(), variableByNameAndValue.getValue());
+            }
+            return result;
+        }
+        return text;
     }
 
     private static List<String> readAllLines(Path file) {

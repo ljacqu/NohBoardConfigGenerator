@@ -37,6 +37,11 @@ public class GenerationTest {
         checkTestConfigFileGeneratesExpectedJson("tr1_full.txt", "tr1_full_expected.json");
     }
 
+    @Test
+    void test_tr2() {
+        checkTestConfigFileGeneratesExpectedJson("tr2.txt", "tr2_expected.json");
+    }
+
     private void checkTestConfigFileGeneratesExpectedJson(String configFileName, String expectedResultFileName) {
         // given
         Path file = getResourceFile("testconfigs/" + configFileName);

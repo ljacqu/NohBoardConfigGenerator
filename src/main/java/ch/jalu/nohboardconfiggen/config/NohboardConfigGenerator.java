@@ -8,6 +8,7 @@ import ch.jalu.nohboardconfiggen.definition.KeyboardRow;
 import ch.jalu.nohboardconfiggen.definition.Unit;
 import ch.jalu.nohboardconfiggen.definition.ValueWithUnit;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -97,17 +98,10 @@ public class NohboardConfigGenerator {
     }
 
     private List<NohbCoords> calculateBounds(NohbCoords topLeftPosition, KeyboardConfig config, KeyDefinition key) {
-        int xIncrement = key.getCustomWidth() != null
-            ? key.getCustomWidth().resolveToPixels(config.getWidth())
-            : config.getWidth();
-        int yIncrement = key.getCustomHeight() != null
-            ? key.getCustomHeight().resolveToPixels(config.getHeight())
-            : config.getHeight();
-
         int leftX = topLeftPosition.getX();
         int topY = topLeftPosition.getY();
-        int rightX = leftX + xIncrement;
-        int bottomY = topY + yIncrement;
+        int rightX = leftX + calculateKeySize(key.getCustomWidth(), config.getWidth(), config.getSpace());
+        int bottomY = topY + calculateKeySize(key.getCustomHeight(), config.getHeight(), config.getSpace());
 
         // The order of the bounds is relevant; NohBoard has them in the following order:
         // 0  1
@@ -117,6 +111,19 @@ public class NohboardConfigGenerator {
             new NohbCoords(rightX, topY),
             new NohbCoords(rightX, bottomY),
             new NohbCoords(leftX, bottomY));
+    }
+
+    private int calculateKeySize(ValueWithUnit customSize, int baseSize, int spacing) {
+        if (customSize == null) {
+            return baseSize;
+        }
+
+        int size = customSize.resolveToPixels(baseSize);
+        // e.g. if width is set to 2, we need to add one spacing to it, so it spans the whole two keys
+        if (customSize.unit() == Unit.KEY && customSize.value().compareTo(BigDecimal.ONE) > 0) {
+            size += customSize.value().subtract(BigDecimal.ONE).intValue() * spacing;
+        }
+        return size;
     }
 
     private void setHeightAndWidth(NohbConfiguration config) {
