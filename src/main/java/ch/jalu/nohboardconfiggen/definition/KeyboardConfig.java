@@ -14,7 +14,7 @@ public class KeyboardConfig {
 
     private int width = 40;
     private int height = 40;
-    private int space = 1;
+    private int spacing = 1;
 
     private List<KeyboardRow> rows = new ArrayList<>();
 

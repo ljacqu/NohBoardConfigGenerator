@@ -13,7 +13,7 @@ import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -21,9 +21,9 @@ import java.util.regex.Pattern;
 
 public class DefinitionParser {
 
-    private static final Pattern PROPERTY_DEFINITION_PATTERN = Pattern.compile("(\\w+)=(\\d+(\\.\\d+)?)(\\w+)?");
+    private static final Pattern PROPERTY_DEFINITION_PATTERN = Pattern.compile("(\\w+)=(-?\\d+(\\.\\d+)?)(\\w+)?");
 
-    private final Map<String, String> variables = new HashMap<>();
+    private final Map<String, String> variables = new LinkedHashMap<>();
 
     public KeyboardConfig parseConfig(Path file) {
         List<String> lines = readAllLines(file);
@@ -105,8 +105,8 @@ public class DefinitionParser {
             case "height":
                 config.setHeight(value);
                 break;
-            case "space":
-                config.setSpace(value);
+            case "spacing":
+                config.setSpacing(value);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown property '" + propertyName + "' in line: " + line);
@@ -132,6 +132,9 @@ public class DefinitionParser {
                 break;
             case "marginLeft":
                 key.setMarginLeft(new ValueWithUnit(value, unit));
+                break;
+            case "stacked":
+                key.setStacked(value.compareTo(BigDecimal.ZERO) != 0);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown property '" + propertyName + "' in line: " + fullLine);

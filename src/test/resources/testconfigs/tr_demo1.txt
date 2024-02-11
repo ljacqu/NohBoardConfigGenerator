@@ -1,6 +1,6 @@
-width=40
-height=40
-space=1
+width=40px
+height=40px
+spacing=1px
 
 Keys:
 
@@ -10,20 +10,20 @@ Pist 1
 Shotg 2
 Eagle 3
 Uzis 4
-SMed 8 height=0.5
-LMed 9 height=0.5
+SMed 8 height=20px
+LMed 9 height=19px stacked=1
 
-Save F5 height=0.5
-Load F6 height=0.5
+Save F5 height=20px
+Load F6 height=19px stacked=1
 Dash /
 Duck .
 Ctrl RCtrl
 ↑ Up
-Walk Rshift
+Walk RShift
 Flare ,
 
 SLeft Delete
-Walk Lshift
+Walk LShift
 Look Num0
 ← Left
 ↓ Down

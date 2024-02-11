@@ -34,9 +34,18 @@ public class NohboardConfigGenerator {
         for (KeyboardRow row : config.getRows()) {
             int yMaxInCurrentRow = 0;
             xCurrentCell = KEYBOARD_SURFACE_MARGIN;
+            NohbCoords topLeftPosition = null;
+            NohbCoords bottomRightPosition = null;
             for (KeyDefinition keyDefinition : row.getKeys()) {
-                NohbCoords topLeftPosition =
-                    calculateTopLeftPosition(xCurrentCell, yCurrentRowTop, keyDefinition, config);
+                if (keyDefinition.isStacked()) {
+                    if (bottomRightPosition == null) {
+                        throw new IllegalStateException("Stacked key may not be first in row");
+                    }
+                    topLeftPosition = calculateTopLeftPosition(topLeftPosition.getX(),
+                        bottomRightPosition.getY() + config.getSpacing(), keyDefinition, config);
+                } else {
+                    topLeftPosition = calculateTopLeftPosition(xCurrentCell, yCurrentRowTop, keyDefinition, config);
+                }
 
                 NohbElement element = new NohbElement();
                 element.setTexts(keyDefinition.getText());
@@ -45,11 +54,11 @@ public class NohboardConfigGenerator {
                 List<NohbElement> elementsForKey = generateElementsForAllKeys(element, keyDefinition.getKeys());
                 elements.addAll(elementsForKey);
 
-                NohbCoords maxBoundary = element.getBoundaries().get(MAX_BOUNDARY_INDEX);
-                yMaxInCurrentRow = Math.max(yMaxInCurrentRow, maxBoundary.getY());
-                xCurrentCell = maxBoundary.getX() + config.getSpace();
+                bottomRightPosition = element.getBoundaries().get(MAX_BOUNDARY_INDEX);
+                yMaxInCurrentRow = Math.max(yMaxInCurrentRow, bottomRightPosition.getY());
+                xCurrentCell = bottomRightPosition.getX() + config.getSpacing();
             }
-            yCurrentRowTop = yMaxInCurrentRow + config.getSpace(); // todo: what if a key should go down two rows? :/
+            yCurrentRowTop = yMaxInCurrentRow + config.getSpacing(); // todo: what if a key should go down two rows? :/
         }
 
         int id = 1;
@@ -66,7 +75,7 @@ public class NohboardConfigGenerator {
         if (marginLeft != null) {
             xCurrentCell += marginLeft.resolveToPixels(config.getWidth());
             if (marginLeft.unit() == Unit.KEY) {
-                xCurrentCell += marginLeft.value().intValue() * config.getSpace();
+                xCurrentCell += marginLeft.value().intValue() * config.getSpacing();
             }
         }
 
@@ -75,7 +84,7 @@ public class NohboardConfigGenerator {
         if (marginTop != null) {
             yTopLeftCurrentCell += marginTop.resolveToPixels(config.getHeight());
             if (marginTop.unit() == Unit.KEY) {
-                yTopLeftCurrentCell += marginTop.value().intValue() * config.getSpace();
+                yTopLeftCurrentCell += marginTop.value().intValue() * config.getSpacing();
             }
         }
 
@@ -100,8 +109,8 @@ public class NohboardConfigGenerator {
     private List<NohbCoords> calculateBounds(NohbCoords topLeftPosition, KeyboardConfig config, KeyDefinition key) {
         int leftX = topLeftPosition.getX();
         int topY = topLeftPosition.getY();
-        int rightX = leftX + calculateKeySize(key.getCustomWidth(), config.getWidth(), config.getSpace());
-        int bottomY = topY + calculateKeySize(key.getCustomHeight(), config.getHeight(), config.getSpace());
+        int rightX = leftX + calculateKeySize(key.getCustomWidth(), config.getWidth(), config.getSpacing());
+        int bottomY = topY + calculateKeySize(key.getCustomHeight(), config.getHeight(), config.getSpacing());
 
         // The order of the bounds is relevant; NohBoard has them in the following order:
         // 0  1
