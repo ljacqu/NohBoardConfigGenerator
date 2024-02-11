@@ -1,6 +1,7 @@
 package ch.jalu.nohboardconfiggen.config;
 
 import ch.jalu.nohboardconfiggen.ConfigHelper;
+import ch.jalu.nohboardconfiggen.NumberUtils;
 import ch.jalu.nohboardconfiggen.definition.KeyCode;
 import ch.jalu.nohboardconfiggen.definition.KeyDefinition;
 import ch.jalu.nohboardconfiggen.definition.KeyboardConfig;
@@ -9,6 +10,8 @@ import ch.jalu.nohboardconfiggen.definition.KeyboardRow;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import static ch.jalu.nohboardconfiggen.NumberUtils.multiply;
 
 public class NohboardConfigGenerator {
 
@@ -26,24 +29,32 @@ public class NohboardConfigGenerator {
         List<NohbElement> elements = new ArrayList<>();
 
         // x is width, y is height
-        int curX;
-        int curY = KEYBOARD_SURFACE_MARGIN;
+        int xCurrentCell;
+        int yCurrentRowTop = KEYBOARD_SURFACE_MARGIN;
         for (KeyboardRow row : config.getRows()) {
-            int maxY = 0;
-            curX = KEYBOARD_SURFACE_MARGIN;
+            int yMaxInCurrentRow = 0;
+            xCurrentCell = KEYBOARD_SURFACE_MARGIN;
             for (KeyDefinition keyDefinition : row.getKeys()) {
+                int yTopLeftCurrentCell = yCurrentRowTop;
+                if (keyDefinition.getMarginTop() != null) {
+                    yTopLeftCurrentCell = yCurrentRowTop + multiply(config.getHeight(), keyDefinition.getMarginTop());
+                }
+                if (keyDefinition.getMarginLeft() != null) {
+                    xCurrentCell += multiply(config.getWidth(), keyDefinition.getMarginLeft());
+                }
+
                 NohbElement element = new NohbElement();
                 element.setTexts(keyDefinition.getText());
-                element.setBoundaries(calculateBounds(curX, curY, config, keyDefinition));
+                element.setBoundaries(calculateBounds(xCurrentCell, yTopLeftCurrentCell, config, keyDefinition));
                 element.setTextPosition(ConfigHelper.calculateCenterTextPosition(element.getBoundaries()));
                 List<NohbElement> elementsForKey = generateElementsForAllKeys(element, keyDefinition.getKeys());
                 elements.addAll(elementsForKey);
 
                 NohbCoords maxBoundary = element.getBoundaries().get(MAX_BOUNDARY_INDEX);
-                maxY = Math.max(maxY, maxBoundary.getY());
-                curX = maxBoundary.getX() + config.getSpace();
+                yMaxInCurrentRow = Math.max(yMaxInCurrentRow, maxBoundary.getY());
+                xCurrentCell = maxBoundary.getX() + config.getSpace();
             }
-            curY = maxY + config.getSpace(); // todo: what if a key should go down two rows? :/
+            yCurrentRowTop = yMaxInCurrentRow + config.getSpace(); // todo: what if a key should go down two rows? :/
         }
 
         int id = 1;
@@ -70,8 +81,12 @@ public class NohboardConfigGenerator {
     }
 
     private List<NohbCoords> calculateBounds(int curX, int curY, KeyboardConfig config, KeyDefinition key) {
-        int xIncr = config.getWidth();
-        int yIncr = config.getHeight(); // todo: respect key def
+        int xIncr = NumberUtils.notNullAndNotZero(key.getCustomWidth())
+            ? multiply(config.getWidth(), key.getCustomWidth())
+            : config.getWidth();
+        int yIncr = NumberUtils.notNullAndNotZero(key.getCustomHeight())
+            ? multiply(config.getHeight(), key.getCustomHeight())
+            : config.getHeight();
 
         NohbCoords coords1 = new NohbCoords(curX, curY);
         NohbCoords coords2 = new NohbCoords(curX + xIncr, curY);

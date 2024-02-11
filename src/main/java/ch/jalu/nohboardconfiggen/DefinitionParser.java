@@ -85,8 +85,7 @@ public class DefinitionParser {
                 config.setSpace(property.value());
                 break;
             default:
-                throw new IllegalArgumentException("Unsupported property '" + property.name()
-                    + "', from line: " + line);
+                throw new IllegalArgumentException("Unknown property '" + property.name() + "' in line: " + line);
         }
     }
 
@@ -99,9 +98,14 @@ public class DefinitionParser {
             case "height":
                 key.setCustomHeight(property.value);
                 break;
+            case "marginTop":
+                key.setMarginTop(property.value);
+                break;
+            case "marginLeft":
+                key.setMarginLeft(property.value);
+                break;
             default:
-                throw new IllegalArgumentException("Unknown property '" + property.name
-                    + ", from line: " + fullLine);
+                throw new IllegalArgumentException("Unknown property '" + property.name + "' in line: " + fullLine);
         }
     }
 

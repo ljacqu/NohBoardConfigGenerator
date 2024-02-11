@@ -36,8 +36,14 @@ public class NohbElement {
     @SerializedName("ShiftText")
     private String shiftText;
 
+    /**
+     * Copy constructor.
+     *
+     * @param source the source to copy from
+     */
     public NohbElement(NohbElement source) {
         this.type = source.type;
+        this.id = source.id;
         this.boundaries = source.boundaries;
         this.keyCodes = source.keyCodes;
         this.text = source.text;

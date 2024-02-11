@@ -17,7 +17,7 @@ public class Generator {
     }
 
     public void generateConfig() {
-        Path file = Paths.get("./src/test/resources/conf_sample2.txt");
+        Path file = Paths.get("./src/test/resources/tr1_full.txt");
         KeyboardConfig config = parser.parseConfig(file);
         System.out.println(config);
 

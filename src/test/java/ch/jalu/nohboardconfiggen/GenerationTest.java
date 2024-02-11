@@ -29,12 +29,17 @@ public class GenerationTest {
 
     @Test
     void test_tr1_simple() {
-        checkFileGeneratesExpectedJson("tr1_simple.txt", "./expected/tr1_simple_exp.json");
+        checkTestConfigFileGeneratesExpectedJson("tr1_simple.txt", "tr1_simple_expected.json");
     }
 
-    private void checkFileGeneratesExpectedJson(String pathToFile, String pathToFileWithExpectedResult) {
+    @Test
+    void test_tr1_full() {
+        checkTestConfigFileGeneratesExpectedJson("tr1_full.txt", "tr1_full_expected.json");
+    }
+
+    private void checkTestConfigFileGeneratesExpectedJson(String configFileName, String expectedResultFileName) {
         // given
-        Path file = getResourceFile(pathToFile);
+        Path file = getResourceFile("testconfigs/" + configFileName);
 
         // when
         KeyboardConfig config = parser.parseConfig(file);
@@ -42,7 +47,7 @@ public class GenerationTest {
         String json = exporter.toJson(nohbConfig);
 
         // then
-        String expected = readFile(getResourceFile(pathToFileWithExpectedResult));
+        String expected = readFile(getResourceFile("testconfigs/" + expectedResultFileName));
         assertThat(json.replace("\r\n", "\n"), equalTo(expected.replace("\r\n", "\n")));
     }
 

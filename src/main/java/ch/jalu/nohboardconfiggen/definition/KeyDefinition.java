@@ -17,5 +17,7 @@ public class KeyDefinition {
     private Set<KeyCode> keys = EnumSet.noneOf(KeyCode.class);
     private BigDecimal customHeight;
     private BigDecimal customWidth;
+    private BigDecimal marginTop;
+    private BigDecimal marginLeft;
 
 }
