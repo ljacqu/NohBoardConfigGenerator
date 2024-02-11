@@ -37,10 +37,14 @@ public class NohboardConfigGenerator {
             for (KeyDefinition keyDefinition : row.getKeys()) {
                 int yTopLeftCurrentCell = yCurrentRowTop;
                 if (keyDefinition.getMarginTop() != null) {
-                    yTopLeftCurrentCell = yCurrentRowTop + multiply(config.getHeight(), keyDefinition.getMarginTop());
+                    yTopLeftCurrentCell = yCurrentRowTop
+                        + multiply(config.getHeight(), keyDefinition.getMarginTop())
+                        + (keyDefinition.getMarginTop().intValue() * config.getSpace());
                 }
                 if (keyDefinition.getMarginLeft() != null) {
-                    xCurrentCell += multiply(config.getWidth(), keyDefinition.getMarginLeft());
+                    xCurrentCell = xCurrentCell
+                        + multiply(config.getWidth(), keyDefinition.getMarginLeft())
+                        + keyDefinition.getMarginLeft().intValue() * config.getSpace();
                 }
 
                 NohbElement element = new NohbElement();
