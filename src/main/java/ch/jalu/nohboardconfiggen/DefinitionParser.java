@@ -8,6 +8,7 @@ import com.google.common.primitives.Ints;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -28,28 +29,11 @@ public class DefinitionParser {
         for (String line : lines) {
             line = line.trim();
             if (!hasKey) {
-                if (line.isEmpty()) {
-                    continue;
-                } else if (line.startsWith("width=") || line.startsWith("height=") || line.startsWith("space=")) {
-                    Object[] propertyAndValue = parseConfigLine(line);
-                    switch ((String) propertyAndValue[0]) {
-                        case "width":
-                            config.setWidth((int) propertyAndValue[1]);
-                            break;
-                        case "height":
-                            config.setHeight((int) propertyAndValue[1]);
-                            break;
-                        case "space":
-                            config.setSpace((int) propertyAndValue[1]);
-                            break;
-                        default:
-                            throw new IllegalArgumentException("Unsupported property '" + propertyAndValue[0]
-                                + "', from line: " + line);
-                    }
+                if (PROPERTY_DEFINITION_PATTERN.matcher(line).matches()) {
+                    processConfigLine(line, config);
                 } else if (line.equals("Keys:")) {
                     hasKey = true;
-                    continue;
-                } else {
+                } else if (!line.isEmpty()) {
                     throw new IllegalArgumentException("Unexpected line in config section: " + line);
                 }
             } else {
@@ -57,24 +41,11 @@ public class DefinitionParser {
                     config.getRows().add(row);
                     row = new KeyboardRow();
                 } else {
-                    String[] lineParts = line.split(" ");
-                    KeyDefinition key = new KeyDefinition();
-                    key.setText(lineParts[0]);
-                    for (int i = 1; i < lineParts.length; ++i) {
-                        if (PROPERTY_DEFINITION_PATTERN.matcher(lineParts[i]).matches()) {
-                            // TODO: Configuration
-                        } else {
-                            key.getKeys().add(KeyCode.getEntryOrThrow(lineParts[i]));
-                        }
-                    }
-                    if (key.getKeys().isEmpty()) {
-                        throw new IllegalArgumentException("No keyboard key was defined for key: " + line);
-                    }
-
-                    row.getKeys().add(key);
+                    row.getKeys().add(parseKeyLine(line));
                 }
             }
         }
+        config.getRows().add(row);
 
         // todo: find better way to add rows
         config.getRows().removeIf(configRow -> configRow.getKeys().isEmpty());
@@ -84,7 +55,57 @@ public class DefinitionParser {
         return config;
     }
 
-    private Object[] parseConfigLine(String line) {
+    private KeyDefinition parseKeyLine(String line) {
+        String[] lineParts = line.split(" ");
+        KeyDefinition key = new KeyDefinition();
+        key.setText(lineParts[0]);
+        for (int i = 1; i < lineParts.length; ++i) {
+            if (PROPERTY_DEFINITION_PATTERN.matcher(lineParts[i]).matches()) {
+                processConfigStatement(lineParts[i], key, line);
+            } else {
+                key.getKeys().add(KeyCode.getEntryOrThrow(lineParts[i]));
+            }
+        }
+        if (key.getKeys().isEmpty()) {
+            throw new IllegalArgumentException("No keyboard key was defined for key: " + line);
+        }
+        return key;
+    }
+
+    private void processConfigLine(String line, KeyboardConfig config) {
+        Property<Integer> property = parseIntConfigValue(line);
+        switch (property.name()) {
+            case "width":
+                config.setWidth(property.value());
+                break;
+            case "height":
+                config.setHeight(property.value());
+                break;
+            case "space":
+                config.setSpace(property.value());
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported property '" + property.name()
+                    + "', from line: " + line);
+        }
+    }
+
+    private void processConfigStatement(String textToParse, KeyDefinition key, String fullLine) {
+        Property<BigDecimal> property = parseBigDecimalConfigValue(textToParse);
+        switch (property.name()) {
+            case "width":
+                key.setCustomWidth(property.value);
+                break;
+            case "height":
+                key.setCustomHeight(property.value);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown property '" + property.name
+                    + ", from line: " + fullLine);
+        }
+    }
+
+    private Property<Integer> parseIntConfigValue(String line) {
         String[] parts = line.split("=");
         if (parts.length != 2) {
             throw new IllegalArgumentException("Invalid line: " + line);
@@ -93,7 +114,19 @@ public class DefinitionParser {
         if (num == null) {
             throw new IllegalArgumentException("Expected numerical value in line: " + line);
         }
-        return new Object[]{ parts[0], num };
+        return new Property<>(parts[0], num);
+    }
+
+    private Property<BigDecimal> parseBigDecimalConfigValue(String line) {
+        String[] parts = line.split("=");
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Invalid line: " + line);
+        }
+        try {
+            return new Property<>(parts[0], new BigDecimal(parts[1]));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Expected numerical value in line: " + line);
+        }
     }
 
     private static List<String> readAllLines(Path file) {
@@ -102,5 +135,9 @@ public class DefinitionParser {
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to read " + file, e);
         }
+    }
+
+    private record Property<T>(String name, T value) {
+
     }
 }

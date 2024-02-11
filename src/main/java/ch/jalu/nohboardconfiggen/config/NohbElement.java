@@ -2,12 +2,14 @@ package ch.jalu.nohboardconfiggen.config;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class NohbElement {
 
     @SerializedName("__type")
@@ -33,6 +35,16 @@ public class NohbElement {
 
     @SerializedName("ShiftText")
     private String shiftText;
+
+    public NohbElement(NohbElement source) {
+        this.type = source.type;
+        this.boundaries = source.boundaries;
+        this.keyCodes = source.keyCodes;
+        this.text = source.text;
+        this.textPosition = source.textPosition;
+        this.changeOnCaps = source.changeOnCaps;
+        this.shiftText = source.shiftText;
+    }
 
     public void setTexts(String text) {
         this.text = text;

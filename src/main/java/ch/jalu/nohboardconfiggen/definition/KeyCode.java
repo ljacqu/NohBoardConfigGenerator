@@ -1,5 +1,7 @@
 package ch.jalu.nohboardconfiggen.definition;
 
+import lombok.Getter;
+
 import java.util.Locale;
 
 public enum KeyCode {
@@ -148,6 +150,7 @@ public enum KeyCode {
 
     NUMPAD_ENTER(1025);
 
+    @Getter
     private final int code;
     private final String altName;
 

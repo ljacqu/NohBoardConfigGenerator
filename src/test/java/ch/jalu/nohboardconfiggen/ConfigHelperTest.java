@@ -14,8 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 class ConfigHelperTest {
 
-    private final ConfigHelper configHelper = new ConfigHelper();
-
     @Test
     void shouldCalculateTextPosition() {
         // given
@@ -26,7 +24,7 @@ class ConfigHelperTest {
             new NohbCoords(316, 93));
 
         // when
-        NohbCoords textPosition = configHelper.calculateCenterTextPosition(boundaries);
+        NohbCoords textPosition = ConfigHelper.calculateCenterTextPosition(boundaries);
 
         // then
         assertThat(textPosition.getX(), equalTo(336));
@@ -43,7 +41,7 @@ class ConfigHelperTest {
             new NohbCoords(8, 46));
 
         // when
-        NohbCoords textPosition = configHelper.calculateCenterTextPosition(boundaries);
+        NohbCoords textPosition = ConfigHelper.calculateCenterTextPosition(boundaries);
 
         // then
         assertThat(textPosition.getX(), equalTo(29));
@@ -59,6 +57,6 @@ class ConfigHelperTest {
             new NohbCoords(8, 46));
 
         // when / then
-        assertThrows(IllegalArgumentException.class, () -> configHelper.calculateCenterTextPosition(boundaries));
+        assertThrows(IllegalArgumentException.class, () -> ConfigHelper.calculateCenterTextPosition(boundaries));
     }
 }

@@ -1,0 +1,12 @@
+Keys:
+Inv Esc
+Save F5
+Load F6
+
+LStp W
+RStp E
+Roll R
+
+Walk S
+Jmp D
+Actn F

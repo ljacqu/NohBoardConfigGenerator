@@ -6,7 +6,7 @@ import java.util.List;
 
 public class ConfigHelper {
 
-    public NohbCoords calculateCenterTextPosition(List<NohbCoords> boundaries) {
+    public static NohbCoords calculateCenterTextPosition(List<NohbCoords> boundaries) {
         if (boundaries == null || boundaries.size() != 4) {
             throw new IllegalArgumentException("Expected four boundaries");
         }
