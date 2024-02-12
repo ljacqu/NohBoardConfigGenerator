@@ -1,3 +1,4 @@
+keyboard=fr
 width=40px
 height=40px
 spacing=1px
@@ -15,7 +16,7 @@ LMed 9 height=19px stacked=1
 
 Save F5 height=20px
 Load F6 height=19px stacked=1
-Dash /
+Dash ;
 Duck .
 Ctrl RCtrl
 ↑ Up

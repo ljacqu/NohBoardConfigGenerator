@@ -7,6 +7,7 @@ import ch.jalu.nohboardconfiggen.definition.KeyboardRow;
 import ch.jalu.nohboardconfiggen.definition.Unit;
 import ch.jalu.nohboardconfiggen.definition.ValueWithUnit;
 import ch.jalu.nohboardconfiggen.keycode.KeyboardLayout;
+import ch.jalu.nohboardconfiggen.keycode.KeyboardRegion;
 import com.google.common.primitives.Ints;
 
 import java.io.IOException;
@@ -22,28 +23,34 @@ import java.util.regex.Pattern;
 
 public class DefinitionParser {
 
-    private static final Pattern PROPERTY_DEFINITION_PATTERN = Pattern.compile("(\\w+)=(-?\\d+(\\.\\d+)?)(\\w+)?");
+    private static final Pattern PROPERTY_DEFINITION_PATTERN = Pattern.compile("(\\w+)=([a-zA-Z0-9.]+)");
+
+    private static final Pattern NUMERIC_VALUE_WITH_OPTIONAL_UNIT = Pattern.compile("(\\d+(\\.\\d+)?)(\\w+)?");
 
     private final Map<String, String> variables = new LinkedHashMap<>();
+    private KeyboardLayout keyboardLayout;
 
     public KeyboardConfig parseConfig(Path file) {
         List<String> lines = readAllLines(file);
 
         KeyboardConfig config = new KeyboardConfig();
 
-        boolean hasKey = false;
+        boolean foundKeysSection = false;
         KeyboardRow row = new KeyboardRow();
 
         for (String line : lines) {
             line = line.trim();
-            if (!hasKey) {
-                Matcher propertyDefinitionMatcher = PROPERTY_DEFINITION_PATTERN.matcher(line);
-                if (propertyDefinitionMatcher.matches()) {
-                    processIntProperty(line, config, propertyDefinitionMatcher);
+
+            if (!foundKeysSection) {
+                if (handleOverallProperty(line, config)) {
+                    continue; // property saved
                 } else if (line.startsWith("$")) {
                     processVariable(line);
                 } else if (line.equals("Keys:")) {
-                    hasKey = true;
+                    foundKeysSection = true;
+                    if (keyboardLayout == null) {
+                        keyboardLayout = KeyboardLayout.create(null);
+                    }
                 } else if (!line.isEmpty()) {
                     throw new IllegalArgumentException("Unexpected line in config section: " + line);
                 }
@@ -52,9 +59,8 @@ public class DefinitionParser {
                     config.getRows().add(row);
                     row = new KeyboardRow();
                 } else {
-                    Matcher propertyDefinitionMatcher = PROPERTY_DEFINITION_PATTERN.matcher(line);
-                    if (propertyDefinitionMatcher.matches()) {
-                        processPropertyForRow(row, line, propertyDefinitionMatcher);
+                    if (handleRowProperty(line, row)) {
+                        continue; // property saved
                     } else {
                         row.getKeys().add(parseKeyLine(line));
                     }
@@ -70,6 +76,55 @@ public class DefinitionParser {
         return config;
     }
 
+    private boolean handleOverallProperty(String line, KeyboardConfig config) {
+        Matcher propertyDefinitionMatcher = PROPERTY_DEFINITION_PATTERN.matcher(line);
+        if (!propertyDefinitionMatcher.matches()) {
+            return false;
+        }
+
+        String propertyName = propertyDefinitionMatcher.group(1);
+        String valueRaw = propertyDefinitionMatcher.group(2);
+
+        switch (propertyName) {
+            case "keyboard":
+                keyboardLayout = KeyboardLayout.create(KeyboardRegion.findByCodeOrThrow(valueRaw));
+                break;
+            case "width":
+                config.setWidth(extractPixelPropertyOrThrow(valueRaw, propertyName, line));
+                break;
+            case "height":
+                config.setHeight(extractPixelPropertyOrThrow(valueRaw, propertyName, line));
+                break;
+            case "spacing":
+                config.setSpacing(extractPixelPropertyOrThrow(valueRaw, propertyName, line));
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown property '" + propertyName + "' in line: " + line);
+        }
+        return true;
+    }
+
+    private static int extractPixelPropertyOrThrow(String valueRaw, String propertyName, String fullLine) {
+        Matcher numericValueMatcher = NUMERIC_VALUE_WITH_OPTIONAL_UNIT.matcher(valueRaw);
+        Integer value = numericValueMatcher.matches()
+            ? Ints.tryParse(numericValueMatcher.group(1))
+            : null;
+        if (value == null) {
+            throw new IllegalArgumentException("Invalid value for property '" + propertyName
+                + "' found, expected integer. Full line: " + fullLine);
+        }
+
+        String unitInput = numericValueMatcher.group(3);
+        if (unitInput != null) {
+            Unit unit = Unit.fromSymbolOrDefaultIfNull(unitInput);
+            if (unit != Unit.PIXEL) {
+                throw new IllegalArgumentException("Found invalid unit for property '" + propertyName
+                    + "'; expected pixels. Line: " + fullLine);
+            }
+        }
+        return value;
+    }
+
     private KeyDefinition parseKeyLine(String line) {
         int firstSpaceIndex = line.indexOf(' ');
         KeyDefinition key = new KeyDefinition();
@@ -77,17 +132,12 @@ public class DefinitionParser {
 
         String remainder = firstSpaceIndex >= 0 ? replaceVariables(line.substring(firstSpaceIndex)) : "";
         for (String linePart : remainder.split(" ")) {
-            if (linePart.isEmpty()) {
+            if (linePart.isEmpty() || processPropertyForKey(linePart, key, line)) {
                 continue;
             }
 
-            Matcher propertyDefinitionMatcher = PROPERTY_DEFINITION_PATTERN.matcher(linePart);
-            if (propertyDefinitionMatcher.matches()) {
-                processPropertyForKey(key, line, propertyDefinitionMatcher);
-            } else {
-                // TODO Add region option and pass it in here
-                key.getKeys().add(new KeyBinding(KeyboardLayout.create(null).getKeyCodeOrThrow(linePart)));
-            }
+            int keyCode = keyboardLayout.getKeyCodeOrThrow(linePart);
+            key.getKeys().add(new KeyBinding(keyCode));
         }
 
         if (key.getKeys().isEmpty()) {
@@ -96,86 +146,69 @@ public class DefinitionParser {
         return key;
     }
 
-    private void processIntProperty(String line, KeyboardConfig config, Matcher propertyDefinitionMatcher) {
-        String propertyName = propertyDefinitionMatcher.group(1);
-        Integer value = Ints.tryParse(propertyDefinitionMatcher.group(2));
-        if (value == null) {
-            throw new IllegalArgumentException("Invalid value '" + propertyDefinitionMatcher.group(2)
-                + "' found, expected integer. Full line: " + line);
-        }
-        String unitInput = propertyDefinitionMatcher.group(4);
-        if (unitInput != null) {
-            Unit unit = Unit.fromSymbolOrDefaultIfNull(unitInput);
-            if (unit != Unit.PIXEL) {
-                throw new IllegalArgumentException("Found invalid unit; expected pixels. Line: " + line);
-            }
+    private boolean processPropertyForKey(String linePart, KeyDefinition key, String fullLine) {
+        Matcher propertyDefinitionMatcher = PROPERTY_DEFINITION_PATTERN.matcher(linePart);
+        if (!propertyDefinitionMatcher.matches()) {
+            return false;
         }
 
+        String propertyName = propertyDefinitionMatcher.group(1);
+        String valueRaw = propertyDefinitionMatcher.group(2);
+        ValueWithUnit value = parseValueWithOptionalUnit(valueRaw, propertyName, fullLine);
         switch (propertyName) {
             case "width":
-                config.setWidth(value);
+                key.setCustomWidth(value);
                 break;
             case "height":
-                config.setHeight(value);
-                break;
-            case "spacing":
-                config.setSpacing(value);
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown property '" + propertyName + "' in line: " + line);
-        }
-    }
-
-    private void processPropertyForKey(KeyDefinition key, String fullLine, Matcher propertyDefinitionMatcher) {
-        String propertyName = propertyDefinitionMatcher.group(1);
-        BigDecimal value = NumberUtils.parseBigDecimalOrThrow(propertyDefinitionMatcher.group(2),
-            () -> "Invalid number for property '" + propertyName + "' in line: " + fullLine);
-        String unitSpecifier = propertyDefinitionMatcher.group(4);
-        Unit unit = Unit.fromSymbolOrDefaultIfNull(unitSpecifier);
-
-        switch (propertyName) {
-            case "width":
-                key.setCustomWidth(new ValueWithUnit(value, unit));
-                break;
-            case "height":
-                key.setCustomHeight(new ValueWithUnit(value, unit));
+                key.setCustomHeight(value);
                 break;
             case "marginTop":
-                key.setMarginTop(new ValueWithUnit(value, unit));
+                key.setMarginTop(value);
                 break;
             case "marginLeft":
-                key.setMarginLeft(new ValueWithUnit(value, unit));
+                key.setMarginLeft(value);
                 break;
             case "stacked":
-                key.setStacked(value.compareTo(BigDecimal.ZERO) != 0);
+                key.setStacked(value.value().compareTo(BigDecimal.ZERO) != 0);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown property '" + propertyName + "' in line: " + fullLine);
         }
+        return true;
     }
 
-    private void processPropertyForRow(KeyboardRow row, String fullLine, Matcher propertyDefinitionMatcher) {
-        if (!row.getKeys().isEmpty()) {
-            throw new IllegalArgumentException(
-                "Unexpected row property; properties should come before keys. Line: " + fullLine);
+    private boolean handleRowProperty(String line, KeyboardRow row) {
+        Matcher propertyDefinitionMatcher = PROPERTY_DEFINITION_PATTERN.matcher(line);
+        if (!propertyDefinitionMatcher.matches()) {
+            return false;
         }
 
         String propertyName = propertyDefinitionMatcher.group(1);
-        BigDecimal value = NumberUtils.parseBigDecimalOrThrow(propertyDefinitionMatcher.group(2),
-            () -> "Invalid number for property '" + propertyName + "' in line: " + fullLine);
-        String unitSpecifier = propertyDefinitionMatcher.group(4);
-        Unit unit = Unit.fromSymbolOrDefaultIfNull(unitSpecifier);
+        String valueRaw = propertyDefinitionMatcher.group(2);
+        ValueWithUnit value = parseValueWithOptionalUnit(valueRaw, propertyName, line);
 
         switch (propertyName) {
             case "marginTop":
-                row.setMarginTop(new ValueWithUnit(value, unit));
+                row.setMarginTop(value);
                 break;
             case "marginLeft":
-                row.setMarginLeft(new ValueWithUnit(value, unit));
+                row.setMarginLeft(value);
                 break;
             default:
-                throw new IllegalArgumentException("Unknown row property '" + propertyName + "' in line: " + fullLine);
+                throw new IllegalArgumentException("Unknown row property '" + propertyName + "' in line: " + line);
         }
+        return true;
+    }
+
+    private ValueWithUnit parseValueWithOptionalUnit(String propertyValue, String propertyName, String fullLine) {
+        Matcher matcher = NUMERIC_VALUE_WITH_OPTIONAL_UNIT.matcher(propertyValue);
+        String numericValueRaw = matcher.matches() ? matcher.group(1) : "undefined";
+        BigDecimal value = NumberUtils.parseBigDecimalOrThrow(numericValueRaw,
+            () -> "Invalid number for property '" + propertyName + "' in line: " + fullLine);
+
+        String unitSpecifier = matcher.group(3);
+        Unit unit = Unit.fromSymbolOrDefaultIfNull(unitSpecifier);
+        return new ValueWithUnit(value, unit);
     }
 
     private void processVariable(String line) {
