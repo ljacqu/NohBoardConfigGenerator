@@ -6,12 +6,12 @@ import java.util.Locale;
 
 public enum KeyCode {
 
-    BACKSPACE(8),
+    BACKSPACE(8, "Back"),
     TAB(9),
     CLEAR(12),
     ENTER(13),
     PAUSE(19),
-    CAPS_LOCK(20),
+    CAPS_LOCK(20, "Caps"),
     ESCAPE(27, "Esc"),
     SPACE(32),
 
@@ -20,14 +20,14 @@ public enum KeyCode {
     END(35),
     HOME(36),
 
-    LEFT(37),
-    UP(38),
-    RIGHT(39),
-    DOWN(40),
+    LEFT(37, "ArrowLeft"),
+    UP(38, "ArrowUp"),
+    RIGHT(39, "ArrowRight"),
+    DOWN(40, "ArrowDown"),
 
     PRINT_SCREEN(44, "PrtScrn"),
     INSERT(45),
-    DELETE(46),
+    DELETE(46, "Del"),
 
     KEY_0(48, "0"),
     KEY_1(49, "1"),
@@ -161,6 +161,10 @@ public enum KeyCode {
     KeyCode(int code, String altName) {
         this.code = code;
         this.altName = altName;
+    }
+
+    String getAltName() {
+        return altName;
     }
 
     public static KeyCode getEntryOrThrow(String keyName) {
