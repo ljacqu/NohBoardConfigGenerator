@@ -13,7 +13,7 @@ import java.util.List;
 public class KeyboardRow {
 
     private List<KeyDefinition> keys = new ArrayList<>();
-    private Integer startX;
-    private Integer startY;
+    private ValueWithUnit marginTop;
+    private ValueWithUnit marginLeft;
 
 }

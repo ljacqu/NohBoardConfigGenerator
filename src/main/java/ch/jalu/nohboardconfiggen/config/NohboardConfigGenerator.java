@@ -32,8 +32,16 @@ public class NohboardConfigGenerator {
         int xCurrentCell;
         int yCurrentRowTop = KEYBOARD_SURFACE_MARGIN;
         for (KeyboardRow row : config.getRows()) {
-            int yMaxInCurrentRow = 0;
             xCurrentCell = KEYBOARD_SURFACE_MARGIN;
+            if (row.getMarginLeft() != null) {
+                xCurrentCell += row.getMarginLeft().resolveToPixels(config.getWidth());
+            }
+
+            int yMaxInCurrentRow = 0;
+            if (row.getMarginTop() != null) {
+                yCurrentRowTop += row.getMarginTop().resolveToPixels(config.getHeight());
+            }
+
             NohbCoords topLeftPosition = null;
             NohbCoords bottomRightPosition = null;
             for (KeyDefinition keyDefinition : row.getKeys()) {

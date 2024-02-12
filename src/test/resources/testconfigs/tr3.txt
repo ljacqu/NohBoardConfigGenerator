@@ -15,13 +15,14 @@ Inv Esc width=40px
 8 8 $weapon
 Roll End width=40px
 
+marginTop=0.2
 Walk S LShift RShift
 Duck G .
 Flare A ,
 Sprint NumPad1 -
-Lstp Delete height=0.9 marginLeft=0.2
+Lstp Delete height=0.8 marginTop=0.2 marginLeft=0.2 width=40px
 ↑ Up $key
-Rstp PageDown height=0.9
+Rstp PageDown height=0.8 marginTop=0.2 width=40px
 
 Action F LCtrl RCtrl
 Jump D LAlt RAlt

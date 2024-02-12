@@ -326,19 +326,19 @@
       "Boundaries": [
         {
           "X": 5,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 65,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 65,
-          "Y": 86
+          "Y": 94
         },
         {
           "X": 5,
-          "Y": 86
+          "Y": 94
         }
       ],
       "KeyCodes": [
@@ -347,7 +347,7 @@
       "Text": "Walk",
       "TextPosition": {
         "X": 35,
-        "Y": 66
+        "Y": 74
       },
       "ChangeOnCaps": false,
       "ShiftText": "Walk"
@@ -358,19 +358,19 @@
       "Boundaries": [
         {
           "X": 5,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 65,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 65,
-          "Y": 86
+          "Y": 94
         },
         {
           "X": 5,
-          "Y": 86
+          "Y": 94
         }
       ],
       "KeyCodes": [
@@ -379,7 +379,7 @@
       "Text": "Walk",
       "TextPosition": {
         "X": 35,
-        "Y": 66
+        "Y": 74
       },
       "ChangeOnCaps": false,
       "ShiftText": "Walk"
@@ -390,19 +390,19 @@
       "Boundaries": [
         {
           "X": 5,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 65,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 65,
-          "Y": 86
+          "Y": 94
         },
         {
           "X": 5,
-          "Y": 86
+          "Y": 94
         }
       ],
       "KeyCodes": [
@@ -411,7 +411,7 @@
       "Text": "Walk",
       "TextPosition": {
         "X": 35,
-        "Y": 66
+        "Y": 74
       },
       "ChangeOnCaps": false,
       "ShiftText": "Walk"
@@ -422,19 +422,19 @@
       "Boundaries": [
         {
           "X": 66,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 126,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 126,
-          "Y": 86
+          "Y": 94
         },
         {
           "X": 66,
-          "Y": 86
+          "Y": 94
         }
       ],
       "KeyCodes": [
@@ -443,7 +443,7 @@
       "Text": "Duck",
       "TextPosition": {
         "X": 96,
-        "Y": 66
+        "Y": 74
       },
       "ChangeOnCaps": false,
       "ShiftText": "Duck"
@@ -454,19 +454,19 @@
       "Boundaries": [
         {
           "X": 66,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 126,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 126,
-          "Y": 86
+          "Y": 94
         },
         {
           "X": 66,
-          "Y": 86
+          "Y": 94
         }
       ],
       "KeyCodes": [
@@ -475,7 +475,7 @@
       "Text": "Duck",
       "TextPosition": {
         "X": 96,
-        "Y": 66
+        "Y": 74
       },
       "ChangeOnCaps": false,
       "ShiftText": "Duck"
@@ -486,19 +486,19 @@
       "Boundaries": [
         {
           "X": 127,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 187,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 187,
-          "Y": 86
+          "Y": 94
         },
         {
           "X": 127,
-          "Y": 86
+          "Y": 94
         }
       ],
       "KeyCodes": [
@@ -507,7 +507,7 @@
       "Text": "Flare",
       "TextPosition": {
         "X": 157,
-        "Y": 66
+        "Y": 74
       },
       "ChangeOnCaps": false,
       "ShiftText": "Flare"
@@ -518,19 +518,19 @@
       "Boundaries": [
         {
           "X": 127,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 187,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 187,
-          "Y": 86
+          "Y": 94
         },
         {
           "X": 127,
-          "Y": 86
+          "Y": 94
         }
       ],
       "KeyCodes": [
@@ -539,7 +539,7 @@
       "Text": "Flare",
       "TextPosition": {
         "X": 157,
-        "Y": 66
+        "Y": 74
       },
       "ChangeOnCaps": false,
       "ShiftText": "Flare"
@@ -550,19 +550,19 @@
       "Boundaries": [
         {
           "X": 188,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 248,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 248,
-          "Y": 86
+          "Y": 94
         },
         {
           "X": 188,
-          "Y": 86
+          "Y": 94
         }
       ],
       "KeyCodes": [
@@ -571,7 +571,7 @@
       "Text": "Sprint",
       "TextPosition": {
         "X": 218,
-        "Y": 66
+        "Y": 74
       },
       "ChangeOnCaps": false,
       "ShiftText": "Sprint"
@@ -582,19 +582,19 @@
       "Boundaries": [
         {
           "X": 188,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 248,
-          "Y": 46
+          "Y": 54
         },
         {
           "X": 248,
-          "Y": 86
+          "Y": 94
         },
         {
           "X": 188,
-          "Y": 86
+          "Y": 94
         }
       ],
       "KeyCodes": [
@@ -603,7 +603,7 @@
       "Text": "Sprint",
       "TextPosition": {
         "X": 218,
-        "Y": 66
+        "Y": 74
       },
       "ChangeOnCaps": false,
       "ShiftText": "Sprint"
@@ -614,19 +614,19 @@
       "Boundaries": [
         {
           "X": 261,
-          "Y": 46
+          "Y": 62
         },
         {
-          "X": 321,
-          "Y": 46
+          "X": 301,
+          "Y": 62
         },
         {
-          "X": 321,
-          "Y": 82
+          "X": 301,
+          "Y": 94
         },
         {
           "X": 261,
-          "Y": 82
+          "Y": 94
         }
       ],
       "KeyCodes": [
@@ -634,8 +634,8 @@
       ],
       "Text": "Lstp",
       "TextPosition": {
-        "X": 291,
-        "Y": 64
+        "X": 281,
+        "Y": 78
       },
       "ChangeOnCaps": false,
       "ShiftText": "Lstp"
@@ -645,20 +645,20 @@
       "Id": 21,
       "Boundaries": [
         {
-          "X": 322,
-          "Y": 46
+          "X": 302,
+          "Y": 54
         },
         {
-          "X": 362,
-          "Y": 46
+          "X": 342,
+          "Y": 54
         },
         {
-          "X": 362,
-          "Y": 86
+          "X": 342,
+          "Y": 94
         },
         {
-          "X": 322,
-          "Y": 86
+          "X": 302,
+          "Y": 94
         }
       ],
       "KeyCodes": [
@@ -666,8 +666,8 @@
       ],
       "Text": "↑",
       "TextPosition": {
-        "X": 342,
-        "Y": 66
+        "X": 322,
+        "Y": 74
       },
       "ChangeOnCaps": false,
       "ShiftText": "↑"
@@ -677,20 +677,20 @@
       "Id": 22,
       "Boundaries": [
         {
-          "X": 363,
-          "Y": 46
+          "X": 343,
+          "Y": 62
         },
         {
-          "X": 423,
-          "Y": 46
+          "X": 383,
+          "Y": 62
         },
         {
-          "X": 423,
-          "Y": 82
+          "X": 383,
+          "Y": 94
         },
         {
-          "X": 363,
-          "Y": 82
+          "X": 343,
+          "Y": 94
         }
       ],
       "KeyCodes": [
@@ -698,8 +698,8 @@
       ],
       "Text": "Rstp",
       "TextPosition": {
-        "X": 393,
-        "Y": 64
+        "X": 363,
+        "Y": 78
       },
       "ChangeOnCaps": false,
       "ShiftText": "Rstp"
@@ -710,19 +710,19 @@
       "Boundaries": [
         {
           "X": 5,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 65,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 65,
-          "Y": 127
+          "Y": 135
         },
         {
           "X": 5,
-          "Y": 127
+          "Y": 135
         }
       ],
       "KeyCodes": [
@@ -731,7 +731,7 @@
       "Text": "Action",
       "TextPosition": {
         "X": 35,
-        "Y": 107
+        "Y": 115
       },
       "ChangeOnCaps": false,
       "ShiftText": "Action"
@@ -742,19 +742,19 @@
       "Boundaries": [
         {
           "X": 5,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 65,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 65,
-          "Y": 127
+          "Y": 135
         },
         {
           "X": 5,
-          "Y": 127
+          "Y": 135
         }
       ],
       "KeyCodes": [
@@ -763,7 +763,7 @@
       "Text": "Action",
       "TextPosition": {
         "X": 35,
-        "Y": 107
+        "Y": 115
       },
       "ChangeOnCaps": false,
       "ShiftText": "Action"
@@ -774,19 +774,19 @@
       "Boundaries": [
         {
           "X": 5,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 65,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 65,
-          "Y": 127
+          "Y": 135
         },
         {
           "X": 5,
-          "Y": 127
+          "Y": 135
         }
       ],
       "KeyCodes": [
@@ -795,7 +795,7 @@
       "Text": "Action",
       "TextPosition": {
         "X": 35,
-        "Y": 107
+        "Y": 115
       },
       "ChangeOnCaps": false,
       "ShiftText": "Action"
@@ -806,19 +806,19 @@
       "Boundaries": [
         {
           "X": 66,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 126,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 126,
-          "Y": 127
+          "Y": 135
         },
         {
           "X": 66,
-          "Y": 127
+          "Y": 135
         }
       ],
       "KeyCodes": [
@@ -827,7 +827,7 @@
       "Text": "Jump",
       "TextPosition": {
         "X": 96,
-        "Y": 107
+        "Y": 115
       },
       "ChangeOnCaps": false,
       "ShiftText": "Jump"
@@ -838,19 +838,19 @@
       "Boundaries": [
         {
           "X": 66,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 126,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 126,
-          "Y": 127
+          "Y": 135
         },
         {
           "X": 66,
-          "Y": 127
+          "Y": 135
         }
       ],
       "KeyCodes": [
@@ -859,7 +859,7 @@
       "Text": "Jump",
       "TextPosition": {
         "X": 96,
-        "Y": 107
+        "Y": 115
       },
       "ChangeOnCaps": false,
       "ShiftText": "Jump"
@@ -870,19 +870,19 @@
       "Boundaries": [
         {
           "X": 66,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 126,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 126,
-          "Y": 127
+          "Y": 135
         },
         {
           "X": 66,
-          "Y": 127
+          "Y": 135
         }
       ],
       "KeyCodes": [
@@ -891,7 +891,7 @@
       "Text": "Jump",
       "TextPosition": {
         "X": 96,
-        "Y": 107
+        "Y": 115
       },
       "ChangeOnCaps": false,
       "ShiftText": "Jump"
@@ -902,19 +902,19 @@
       "Boundaries": [
         {
           "X": 127,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 187,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 187,
-          "Y": 127
+          "Y": 135
         },
         {
           "X": 127,
-          "Y": 127
+          "Y": 135
         }
       ],
       "KeyCodes": [
@@ -923,7 +923,7 @@
       "Text": "Guns",
       "TextPosition": {
         "X": 157,
-        "Y": 107
+        "Y": 115
       },
       "ChangeOnCaps": false,
       "ShiftText": "Guns"
@@ -934,19 +934,19 @@
       "Boundaries": [
         {
           "X": 188,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 248,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 248,
-          "Y": 127
+          "Y": 135
         },
         {
           "X": 188,
-          "Y": 127
+          "Y": 135
         }
       ],
       "KeyCodes": [
@@ -955,7 +955,7 @@
       "Text": "Look",
       "TextPosition": {
         "X": 218,
-        "Y": 107
+        "Y": 115
       },
       "ChangeOnCaps": false,
       "ShiftText": "Look"
@@ -966,19 +966,19 @@
       "Boundaries": [
         {
           "X": 261,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 301,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 301,
-          "Y": 127
+          "Y": 135
         },
         {
           "X": 261,
-          "Y": 127
+          "Y": 135
         }
       ],
       "KeyCodes": [
@@ -987,7 +987,7 @@
       "Text": "←",
       "TextPosition": {
         "X": 281,
-        "Y": 107
+        "Y": 115
       },
       "ChangeOnCaps": false,
       "ShiftText": "←"
@@ -998,19 +998,19 @@
       "Boundaries": [
         {
           "X": 302,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 342,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 342,
-          "Y": 127
+          "Y": 135
         },
         {
           "X": 302,
-          "Y": 127
+          "Y": 135
         }
       ],
       "KeyCodes": [
@@ -1019,7 +1019,7 @@
       "Text": "↓",
       "TextPosition": {
         "X": 322,
-        "Y": 107
+        "Y": 115
       },
       "ChangeOnCaps": false,
       "ShiftText": "↓"
@@ -1030,19 +1030,19 @@
       "Boundaries": [
         {
           "X": 343,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 383,
-          "Y": 87
+          "Y": 95
         },
         {
           "X": 383,
-          "Y": 127
+          "Y": 135
         },
         {
           "X": 343,
-          "Y": 127
+          "Y": 135
         }
       ],
       "KeyCodes": [
@@ -1051,13 +1051,13 @@
       "Text": "→",
       "TextPosition": {
         "X": 363,
-        "Y": 107
+        "Y": 115
       },
       "ChangeOnCaps": false,
       "ShiftText": "→"
     }
   ],
-  "Height": 132,
-  "Width": 428,
+  "Height": 140,
+  "Width": 395,
   "Version": 2
 }

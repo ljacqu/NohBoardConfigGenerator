@@ -51,7 +51,12 @@ public class DefinitionParser {
                     config.getRows().add(row);
                     row = new KeyboardRow();
                 } else {
-                    row.getKeys().add(parseKeyLine(line));
+                    Matcher propertyDefinitionMatcher = PROPERTY_DEFINITION_PATTERN.matcher(line);
+                    if (propertyDefinitionMatcher.matches()) {
+                        processPropertyForRow(row, line, propertyDefinitionMatcher);
+                    } else {
+                        row.getKeys().add(parseKeyLine(line));
+                    }
                 }
             }
         }
@@ -122,7 +127,7 @@ public class DefinitionParser {
     private void processPropertyForKey(KeyDefinition key, String fullLine, Matcher propertyDefinitionMatcher) {
         String propertyName = propertyDefinitionMatcher.group(1);
         BigDecimal value = NumberUtils.parseBigDecimalOrThrow(propertyDefinitionMatcher.group(2),
-            () -> "Invalid number for property '" + propertyName + "' in line '" + fullLine + "'");
+            () -> "Invalid number for property '" + propertyName + "' in line: " + fullLine);
         String unitSpecifier = propertyDefinitionMatcher.group(4);
         Unit unit = Unit.fromSymbolOrDefaultIfNull(unitSpecifier);
 
@@ -144,6 +149,30 @@ public class DefinitionParser {
                 break;
             default:
                 throw new IllegalArgumentException("Unknown property '" + propertyName + "' in line: " + fullLine);
+        }
+    }
+
+    private void processPropertyForRow(KeyboardRow row, String fullLine, Matcher propertyDefinitionMatcher) {
+        if (!row.getKeys().isEmpty()) {
+            throw new IllegalArgumentException(
+                "Unexpected row property; properties should come before keys. Line: " + fullLine);
+        }
+
+        String propertyName = propertyDefinitionMatcher.group(1);
+        BigDecimal value = NumberUtils.parseBigDecimalOrThrow(propertyDefinitionMatcher.group(2),
+            () -> "Invalid number for property '" + propertyName + "' in line: " + fullLine);
+        String unitSpecifier = propertyDefinitionMatcher.group(4);
+        Unit unit = Unit.fromSymbolOrDefaultIfNull(unitSpecifier);
+
+        switch (propertyName) {
+            case "marginTop":
+                row.setMarginTop(new ValueWithUnit(value, unit));
+                break;
+            case "marginLeft":
+                row.setMarginLeft(new ValueWithUnit(value, unit));
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown row property '" + propertyName + "' in line: " + fullLine);
         }
     }
 
