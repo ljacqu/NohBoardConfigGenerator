@@ -65,11 +65,16 @@ public class DefinitionParser {
     }
 
     private KeyDefinition parseKeyLine(String line) {
-        String[] lineParts = line.split(" ");
+        int firstSpaceIndex = line.indexOf(' ');
         KeyDefinition key = new KeyDefinition();
-        key.setText(lineParts[0]);
-        for (int i = 1; i < lineParts.length; ++i) {
-            String linePart = replaceVariables(lineParts[i]);
+        key.setText(firstSpaceIndex >= 0 ? line.substring(0, firstSpaceIndex) : line);
+
+        String remainder = firstSpaceIndex >= 0 ? replaceVariables(line.substring(firstSpaceIndex)) : "";
+        for (String linePart : remainder.split(" ")) {
+            if (linePart.isEmpty()) {
+                continue;
+            }
+
             Matcher propertyDefinitionMatcher = PROPERTY_DEFINITION_PATTERN.matcher(linePart);
             if (propertyDefinitionMatcher.matches()) {
                 processPropertyForKey(key, line, propertyDefinitionMatcher);
@@ -77,8 +82,9 @@ public class DefinitionParser {
                 key.getKeys().add(KeyCode.getEntryOrThrow(linePart));
             }
         }
+
         if (key.getKeys().isEmpty()) {
-            throw new IllegalArgumentException("No keyboard key was defined for key: " + line);
+            throw new IllegalArgumentException("No keyboard key was defined for line: " + line);
         }
         return key;
     }
@@ -142,11 +148,17 @@ public class DefinitionParser {
     }
 
     private void processVariable(String line) {
-        String[] lineParts = line.split("=");
-        if (lineParts.length != 2) {
-            throw new IllegalArgumentException("Invalid line '" + line + "'");
+        int firstEqualsIndex = line.indexOf('=');
+        if (firstEqualsIndex <= 0) {
+            throw new IllegalArgumentException("Invalid variable assignment, line: " + line);
         }
-        variables.put(lineParts[0], lineParts[1]);
+
+        String varName = line.substring(0, firstEqualsIndex);
+        if (varName.equals("$") || !varName.trim().equals(varName)) {
+            throw new IllegalArgumentException("Invalid variable name in line: " + line);
+        }
+        String value = line.substring(firstEqualsIndex + 1);
+        variables.put(varName, value);
     }
 
     private String replaceVariables(String text) {

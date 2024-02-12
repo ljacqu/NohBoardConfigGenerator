@@ -43,6 +43,11 @@ public class GenerationTest {
     }
 
     @Test
+    void test_tr3() {
+        checkTestConfigFileGeneratesExpectedJson("tr3.txt", "tr3_expected.json");
+    }
+
+    @Test
     void test_tr_demo1() {
         checkTestConfigFileGeneratesExpectedJson("tr_demo1.txt", "tr_demo1_expected.json");
     }

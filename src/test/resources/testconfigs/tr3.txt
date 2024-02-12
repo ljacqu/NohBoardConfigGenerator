@@ -1,0 +1,32 @@
+width=60
+height=40
+$weapon=height=37px width=37px marginTop=3px
+$key=width=40px
+
+Keys:
+Inv Esc width=40px
+1 1 $weapon
+2 2 $weapon
+3 3 $weapon
+4 4 $weapon
+5 5 $weapon
+6 6 $weapon
+7 7 $weapon
+8 8 $weapon
+Roll End width=40px
+
+Walk S LShift RShift
+Duck G .
+Flare A ,
+Sprint NumPad1 -
+Lstp Delete height=0.9 marginLeft=0.2
+↑ Up $key
+Rstp PageDown height=0.9
+
+Action F LCtrl RCtrl
+Jump D LAlt RAlt
+Guns Space
+Look NumPad0
+← Left $key marginLeft=0.2
+↓ Down $key
+→ Right $key
