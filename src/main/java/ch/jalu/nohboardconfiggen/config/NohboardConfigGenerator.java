@@ -1,7 +1,7 @@
 package ch.jalu.nohboardconfiggen.config;
 
 import ch.jalu.nohboardconfiggen.ConfigHelper;
-import ch.jalu.nohboardconfiggen.definition.KeyCode;
+import ch.jalu.nohboardconfiggen.definition.KeyBinding;
 import ch.jalu.nohboardconfiggen.definition.KeyDefinition;
 import ch.jalu.nohboardconfiggen.definition.KeyboardConfig;
 import ch.jalu.nohboardconfiggen.definition.KeyboardRow;
@@ -11,7 +11,6 @@ import ch.jalu.nohboardconfiggen.definition.ValueWithUnit;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class NohboardConfigGenerator {
 
@@ -99,16 +98,16 @@ public class NohboardConfigGenerator {
         return new NohbCoords(xCurrentCell, yTopLeftCurrentCell);
     }
 
-    private List<NohbElement> generateElementsForAllKeys(NohbElement template, Set<KeyCode> keys) {
-        if (keys.size() == 1) {
-            template.setKeyCodes(keys.stream().map(KeyCode::getCode).toList());
+    private List<NohbElement> generateElementsForAllKeys(NohbElement template, List<KeyBinding> keyBindings) {
+        if (keyBindings.size() == 1) {
+            template.setKeyCodes(keyBindings.get(0).getCodes());
             return List.of(template);
         }
 
-        List<NohbElement> elements = new ArrayList<>(keys.size());
-        for (KeyCode key : keys) {
+        List<NohbElement> elements = new ArrayList<>(keyBindings.size());
+        for (KeyBinding keyBinding : keyBindings) {
             NohbElement element = new NohbElement(template);
-            element.setKeyCodes(List.of(key.getCode()));
+            element.setKeyCodes(keyBinding.getCodes());
             elements.add(element);
         }
         return elements;

@@ -1,11 +1,12 @@
 package ch.jalu.nohboardconfiggen;
 
-import ch.jalu.nohboardconfiggen.definition.KeyCode;
+import ch.jalu.nohboardconfiggen.definition.KeyBinding;
 import ch.jalu.nohboardconfiggen.definition.KeyDefinition;
 import ch.jalu.nohboardconfiggen.definition.KeyboardConfig;
 import ch.jalu.nohboardconfiggen.definition.KeyboardRow;
 import ch.jalu.nohboardconfiggen.definition.Unit;
 import ch.jalu.nohboardconfiggen.definition.ValueWithUnit;
+import ch.jalu.nohboardconfiggen.keycode.KeyboardLayout;
 import com.google.common.primitives.Ints;
 
 import java.io.IOException;
@@ -84,7 +85,8 @@ public class DefinitionParser {
             if (propertyDefinitionMatcher.matches()) {
                 processPropertyForKey(key, line, propertyDefinitionMatcher);
             } else {
-                key.getKeys().add(KeyCode.getEntryOrThrow(linePart));
+                // TODO Add region option and pass it in here
+                key.getKeys().add(new KeyBinding(KeyboardLayout.create(null).getKeyCodeOrThrow(linePart)));
             }
         }
 

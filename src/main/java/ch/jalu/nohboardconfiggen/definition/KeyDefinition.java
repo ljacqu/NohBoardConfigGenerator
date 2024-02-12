@@ -4,8 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.EnumSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -13,7 +13,7 @@ import java.util.Set;
 public class KeyDefinition {
 
     private String text;
-    private Set<KeyCode> keys = EnumSet.noneOf(KeyCode.class);
+    private List<KeyBinding> keys = new ArrayList<>();
     private ValueWithUnit customHeight;
     private ValueWithUnit customWidth;
     private ValueWithUnit marginTop;
