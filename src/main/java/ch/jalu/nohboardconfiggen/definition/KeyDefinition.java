@@ -18,6 +18,7 @@ public class KeyDefinition {
     private ValueWithUnit customWidth;
     private ValueWithUnit marginTop;
     private ValueWithUnit marginLeft;
+    private Integer id;
     private boolean stacked;
 
 }

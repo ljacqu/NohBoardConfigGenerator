@@ -42,7 +42,7 @@ public class DefinitionParser {
             line = line.trim();
 
             if (!foundKeysSection) {
-                if (handleOverallProperty(line, config)) {
+                if (handleGlobalProperty(line, config)) {
                     continue; // property saved
                 } else if (line.startsWith("$")) {
                     processVariable(line);
@@ -76,7 +76,7 @@ public class DefinitionParser {
         return config;
     }
 
-    private boolean handleOverallProperty(String line, KeyboardConfig config) {
+    private boolean handleGlobalProperty(String line, KeyboardConfig config) {
         Matcher propertyDefinitionMatcher = PROPERTY_DEFINITION_PATTERN.matcher(line);
         if (!propertyDefinitionMatcher.matches()) {
             return false;
@@ -154,6 +154,17 @@ public class DefinitionParser {
 
         String propertyName = propertyDefinitionMatcher.group(1);
         String valueRaw = propertyDefinitionMatcher.group(2);
+
+        if ("id".equals(propertyName)) {
+            Integer value = Ints.tryParse(valueRaw);
+            if (value != null) {
+                key.setId(value);
+                return true;
+            } else {
+                throw new IllegalArgumentException("Invalid value '"  + valueRaw + "' for property 'id'");
+            }
+        }
+
         ValueWithUnit value = parseValueWithOptionalUnit(valueRaw, propertyName, fullLine);
         switch (propertyName) {
             case "width":

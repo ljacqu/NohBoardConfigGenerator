@@ -58,7 +58,8 @@ public class NohboardConfigGenerator {
                 element.setTexts(keyDefinition.getText());
                 element.setBoundaries(calculateBounds(topLeftPosition, config, keyDefinition));
                 element.setTextPosition(ConfigHelper.calculateCenterTextPosition(element.getBoundaries()));
-                List<NohbElement> elementsForKey = generateElementsForAllKeys(element, keyDefinition.getKeys());
+                List<NohbElement> elementsForKey =
+                    generateElementsForAllKeys(element, keyDefinition.getKeys(), keyDefinition.getId());
                 elements.addAll(elementsForKey);
 
                 bottomRightPosition = element.getBoundaries().get(MAX_BOUNDARY_INDEX);
@@ -70,8 +71,10 @@ public class NohboardConfigGenerator {
 
         int id = 1;
         for (NohbElement element : elements) {
-            element.setId(id);
-            ++id;
+            if (element.getId() == null) {
+                element.setId(id);
+                ++id;
+            }
         }
         return elements;
     }
@@ -98,16 +101,23 @@ public class NohboardConfigGenerator {
         return new NohbCoords(xCurrentCell, yTopLeftCurrentCell);
     }
 
-    private List<NohbElement> generateElementsForAllKeys(NohbElement template, List<KeyBinding> keyBindings) {
+    private List<NohbElement> generateElementsForAllKeys(NohbElement template, List<KeyBinding> keyBindings,
+                                                         Integer predefinedId) {
         if (keyBindings.size() == 1) {
             template.setKeyCodes(keyBindings.get(0).getCodes());
+            template.setId(predefinedId);
             return List.of(template);
         }
 
+        Integer id = predefinedId;
         List<NohbElement> elements = new ArrayList<>(keyBindings.size());
         for (KeyBinding keyBinding : keyBindings) {
             NohbElement element = new NohbElement(template);
             element.setKeyCodes(keyBinding.getCodes());
+            if (id != null) {
+                element.setId(id);
+                ++id;
+            }
             elements.add(element);
         }
         return elements;

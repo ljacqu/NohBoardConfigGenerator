@@ -21,13 +21,13 @@ Duck G .
 Flare A ,
 Sprint NumPad1 -
 Lstp Delete height=0.8 marginTop=0.2 marginLeft=0.2 width=40px
-↑ Up $key
+↑ Up $key id=100
 Rstp PageDown height=0.8 marginTop=0.2 width=40px
 
 Action F LCtrl RCtrl
 Jump D LAlt RAlt
 Guns Space
 Look NumPad0
-← Left $key marginLeft=0.2
-↓ Down $key
-→ Right $key
+← Left $key marginLeft=0.2 id=101
+↓ Down $key id=102
+→ Right $key id=103
