@@ -290,7 +290,7 @@
     },
     {
       "__type": "KeyboardKey",
-      "Id": 10,
+      "Id": 11,
       "Boundaries": [
         {
           "X": 137,
@@ -322,7 +322,7 @@
     },
     {
       "__type": "KeyboardKey",
-      "Id": 11,
+      "Id": 12,
       "Boundaries": [
         {
           "X": 5,
@@ -354,7 +354,7 @@
     },
     {
       "__type": "KeyboardKey",
-      "Id": 12,
+      "Id": 13,
       "Boundaries": [
         {
           "X": 49,
@@ -386,7 +386,7 @@
     },
     {
       "__type": "KeyboardKey",
-      "Id": 13,
+      "Id": 14,
       "Boundaries": [
         {
           "X": 49,
@@ -418,7 +418,7 @@
     },
     {
       "__type": "KeyboardKey",
-      "Id": 14,
+      "Id": 15,
       "Boundaries": [
         {
           "X": 93,
@@ -450,7 +450,7 @@
     },
     {
       "__type": "KeyboardKey",
-      "Id": 15,
+      "Id": 16,
       "Boundaries": [
         {
           "X": 93,
@@ -482,7 +482,7 @@
     },
     {
       "__type": "KeyboardKey",
-      "Id": 16,
+      "Id": 17,
       "Boundaries": [
         {
           "X": 137,
@@ -514,7 +514,7 @@
     },
     {
       "__type": "KeyboardKey",
-      "Id": 17,
+      "Id": 18,
       "Boundaries": [
         {
           "X": 137,
@@ -546,7 +546,7 @@
     },
     {
       "__type": "KeyboardKey",
-      "Id": 18,
+      "Id": 19,
       "Boundaries": [
         {
           "X": 230,
@@ -578,7 +578,7 @@
     },
     {
       "__type": "KeyboardKey",
-      "Id": 19,
+      "Id": 10,
       "Boundaries": [
         {
           "X": 5,

@@ -10,7 +10,10 @@ import ch.jalu.nohboardconfiggen.definition.ValueWithUnit;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class NohboardConfigGenerator {
 
@@ -69,13 +72,7 @@ public class NohboardConfigGenerator {
             yCurrentRowTop = yMaxInCurrentRow + config.getSpacing(); // todo: what if a key should go down two rows? :/
         }
 
-        int id = 1;
-        for (NohbElement element : elements) {
-            if (element.getId() == null) {
-                element.setId(id);
-                ++id;
-            }
-        }
+        validateAndGenerateIds(elements);
         return elements;
     }
 
@@ -164,5 +161,34 @@ public class NohboardConfigGenerator {
 
         config.setWidth(maxX + KEYBOARD_SURFACE_MARGIN);
         config.setHeight(maxY + KEYBOARD_SURFACE_MARGIN);
+    }
+
+    private void validateAndGenerateIds(List<NohbElement> elements) {
+        Set<Integer> alreadyUsedIds = collectAlreadyUsedIds(elements);
+
+        int id = 1;
+        for (NohbElement element : elements) {
+            if (element.getId() == null) {
+                while (alreadyUsedIds.contains(id)) {
+                    ++id;
+                }
+                element.setId(id);
+                ++id;
+            }
+        }
+    }
+
+    private Set<Integer> collectAlreadyUsedIds(List<NohbElement> elements) {
+        Set<Integer> predefinedIds = new HashSet<>();
+        for (NohbElement element : elements) {
+            if (element.getId() != null) {
+                boolean isNewId = predefinedIds.add(element.getId());
+                if (!isNewId) {
+                    throw new IllegalStateException(
+                        "Predefined ID '" + element.getId() + "' is used multiple times!");
+                }
+            }
+        }
+        return Collections.unmodifiableSet(predefinedIds);
     }
 }
