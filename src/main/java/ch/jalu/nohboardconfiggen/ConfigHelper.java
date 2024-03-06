@@ -4,7 +4,10 @@ import ch.jalu.nohboardconfiggen.config.NohbCoords;
 
 import java.util.List;
 
-public class ConfigHelper {
+public final class ConfigHelper {
+
+    private ConfigHelper() {
+    }
 
     public static NohbCoords calculateCenterTextPosition(List<NohbCoords> boundaries) {
         if (boundaries == null || boundaries.size() != 4) {
