@@ -1,5 +1,9 @@
 package ch.jalu.nohboardconfiggen.definition.parser;
 
+import ch.jalu.nohboardconfiggen.definition.parser.element.Attribute;
+import ch.jalu.nohboardconfiggen.definition.parser.element.Variable;
+import ch.jalu.nohboardconfiggen.definition.parser.element.Variable.AttributeVariable;
+import ch.jalu.nohboardconfiggen.definition.parser.element.Variable.ValueVariable;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
@@ -9,7 +13,7 @@ import java.util.Map;
 
 public class DefinitionParser {
 
-    final Map<String, String> propertyNamesToValue = new HashMap<>();
+    final Map<String, String> attributeNamesToValue = new HashMap<>();
     final Map<String, Variable> variablesByName = new HashMap<>();
 
 
@@ -36,7 +40,7 @@ public class DefinitionParser {
             if (chr == '#') {
                 return false; // Comment - ignore rest
             } else if (chr == '[') {
-                processProperties(lineChars);
+                processAttributes(lineChars);
                 expectEndOfContent(lineChars);
             } else if (chr == '$') {
                 processVariable(lineChars);
@@ -57,25 +61,25 @@ public class DefinitionParser {
             || (c == '_');
     }
 
-    private void processProperties(LineChars lineChars) {
-        List<Property> properties = parsePropertyDeclaration(lineChars);
-        for (Property property : properties) {
-            String prev = propertyNamesToValue.put(property.name, property.value);
+    private void processAttributes(LineChars lineChars) {
+        List<Attribute> attributes = parseAttributeDeclaration(lineChars);
+        for (Attribute attribute : attributes) {
+            String prev = attributeNamesToValue.put(attribute.name(), attribute.value());
             if (prev != null) {
-                throw new IllegalStateException("Property '" + property.name + "' is declared multiple times");
+                throw new IllegalStateException("Attribute '" + attribute.name() + "' is declared multiple times");
             }
         }
     }
 
-    private List<Property> parsePropertyDeclaration(LineChars lineChars) {
-        List<Property> properties = new ArrayList<>();
+    private List<Attribute> parseAttributeDeclaration(LineChars lineChars) {
+        List<Attribute> attributes = new ArrayList<>();
 
         while (true) {
-            // Get property name
+            // Get attribute name
             String identifier = lineChars.nextAllMatching(this::isValidIdentifierChar, true);
             if (identifier.isEmpty()) {
                 String actual = lineChars.hasNext() ? "'" + lineChars.next() + "'" : "end of line";
-                throw new IllegalStateException("Expected property identifier ([a-zA-Z0-9_]), but got "
+                throw new IllegalStateException("Expected attribute identifier ([a-zA-Z0-9_]), but got "
                     + actual + " on " + lineChars.getLineNrColText());
             }
 
@@ -89,11 +93,11 @@ public class DefinitionParser {
                 ? parseTextInDoubleQuotes(lineChars)
                 : parseSimpleText(lineChars);
 
-            properties.add(new Property(identifier, value));
+            attributes.add(new Attribute(identifier, value));
 
             next = lineChars.nextNonWhitespace();
             if (next == ']') {
-                return properties;
+                return attributes;
             } else if (next != ',') {
                 throw new IllegalStateException("Unexpected character '" + next
                     + "' on " + lineChars.getLineNrColText());
@@ -121,19 +125,16 @@ public class DefinitionParser {
         char next = lineChars.peek();
         if (next == '[') {
             lineChars.next();
-            List<Property> properties = parsePropertyDeclaration(lineChars);
-            expectEndOfContent(lineChars);
-            return new PropertyVariable(identifier, properties);
+            List<Attribute> attributes = parseAttributeDeclaration(lineChars);
+            return new AttributeVariable(identifier, attributes);
         } else if (next == '"') {
             String value = parseTextInDoubleQuotes(lineChars);
-            expectEndOfContent(lineChars);
             return new ValueVariable(identifier, value);
         } else if (next == '$') {
             // todo var support
             return null;
         } else {
             String value = parseSimpleText(lineChars);
-            expectEndOfContent(lineChars);
             return new ValueVariable(identifier, value);
         }
     }
@@ -166,15 +167,12 @@ public class DefinitionParser {
 
     private void expectKeysSectionOrThrow(char firstCharacter, LineChars lineChars) {
         if (Character.toLowerCase(firstCharacter) == 'k'
-            && Character.toLowerCase(lineChars.next()) == 'e'
-            && Character.toLowerCase(lineChars.next()) == 'y'
-            && Character.toLowerCase(lineChars.next()) == 's') {
-
+                && Character.toLowerCase(lineChars.next()) == 'e'
+                && Character.toLowerCase(lineChars.next()) == 'y'
+                && Character.toLowerCase(lineChars.next()) == 's') {
             lineChars.expectCharAfterOptionalWhitespace(':');
-
             expectEndOfContent(lineChars);
         }
-
         throw new IllegalStateException("Invalid syntax on " + lineChars.getLineNrText());
     }
 
@@ -212,23 +210,5 @@ public class DefinitionParser {
                 throw new IllegalStateException(
                     "Unknown escape: \\" + nextChar + " on " + lineChars.getLineNrColText());
         }
-    }
-
-    interface Variable {
-
-        String name();
-
-    }
-
-    record ValueVariable(String name, String value) implements Variable {
-
-    }
-
-    record PropertyVariable(String name, List<Property> properties) implements Variable {
-
-    }
-
-    record Property(String name, String value) {
-
     }
 }

@@ -1,5 +1,8 @@
 package ch.jalu.nohboardconfiggen.definition.parser;
 
+import ch.jalu.nohboardconfiggen.definition.parser.element.Attribute;
+import ch.jalu.nohboardconfiggen.definition.parser.element.Variable.AttributeVariable;
+import ch.jalu.nohboardconfiggen.definition.parser.element.Variable.ValueVariable;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +32,7 @@ class DefinitionParserTest {
             parser.parseHeaderLine(" ", 20);
 
             // then
-            assertThat(parser.propertyNamesToValue, anEmptyMap());
+            assertThat(parser.attributeNamesToValue, anEmptyMap());
         }
 
         @Test
@@ -39,49 +42,49 @@ class DefinitionParserTest {
             parser.parseHeaderLine("  # Comment", 20);
 
             // then
-            assertThat(parser.propertyNamesToValue, anEmptyMap());
+            assertThat(parser.attributeNamesToValue, anEmptyMap());
         }
 
         @Test
-        void shouldParseProperties() {
+        void shouldParseAttributes() {
             // given / when
             parser.parseHeaderLine("[width=40px]", 20);
             parser.parseHeaderLine("[height=36px, keyboard=fr]", 20);
 
             // then
-            assertThat(parser.propertyNamesToValue, aMapWithSize(3));
-            assertThat(parser.propertyNamesToValue.get("width"), equalTo("40px"));
-            assertThat(parser.propertyNamesToValue.get("height"), equalTo("36px"));
-            assertThat(parser.propertyNamesToValue.get("keyboard"), equalTo("fr"));
+            assertThat(parser.attributeNamesToValue, aMapWithSize(3));
+            assertThat(parser.attributeNamesToValue.get("width"), equalTo("40px"));
+            assertThat(parser.attributeNamesToValue.get("height"), equalTo("36px"));
+            assertThat(parser.attributeNamesToValue.get("keyboard"), equalTo("fr"));
         }
 
         /**
-         * Tests some variations in whitespace in property declarations.
+         * Tests some variations in whitespace in attribute declarations.
          */
         @Test
-        void shouldParseProperties2() {
+        void shouldParseAttributes2() {
             // given / when
             parser.parseHeaderLine("[ width =  30px ]", 20);
             parser.parseHeaderLine("[ height= 20 , keyboard =de ]", 20);
 
             // then
-            assertThat(parser.propertyNamesToValue, aMapWithSize(3));
-            assertThat(parser.propertyNamesToValue.get("width"), equalTo("30px"));
-            assertThat(parser.propertyNamesToValue.get("height"), equalTo("20"));
-            assertThat(parser.propertyNamesToValue.get("keyboard"), equalTo("de"));
+            assertThat(parser.attributeNamesToValue, aMapWithSize(3));
+            assertThat(parser.attributeNamesToValue.get("width"), equalTo("30px"));
+            assertThat(parser.attributeNamesToValue.get("height"), equalTo("20"));
+            assertThat(parser.attributeNamesToValue.get("keyboard"), equalTo("de"));
         }
 
         @Test
-        void shouldParsePropertiesWithValuesInDoubleQuotes() {
+        void shouldParseAttributesWithValuesInDoubleQuotes() {
             // given / when
             parser.parseHeaderLine("""
                 [ keyboard="nl", width="20px", height="30" ]""", 2);
 
             // then
-            assertThat(parser.propertyNamesToValue, aMapWithSize(3));
-            assertThat(parser.propertyNamesToValue.get("keyboard"), equalTo("nl"));
-            assertThat(parser.propertyNamesToValue.get("width"), equalTo("20px"));
-            assertThat(parser.propertyNamesToValue.get("height"), equalTo("30"));
+            assertThat(parser.attributeNamesToValue, aMapWithSize(3));
+            assertThat(parser.attributeNamesToValue.get("keyboard"), equalTo("nl"));
+            assertThat(parser.attributeNamesToValue.get("width"), equalTo("20px"));
+            assertThat(parser.attributeNamesToValue.get("height"), equalTo("30"));
         }
 
         @Test
@@ -91,20 +94,20 @@ class DefinitionParserTest {
                 [ title="T\\"A", subtitle="[\\\\o=D]", hint="a,b,\\$c" ]""", 8);
 
             // then
-            assertThat(parser.propertyNamesToValue, aMapWithSize(3));
-            assertThat(parser.propertyNamesToValue.get("title"), equalTo("T\"A"));
-            assertThat(parser.propertyNamesToValue.get("subtitle"), equalTo("[\\o=D]"));
-            assertThat(parser.propertyNamesToValue.get("hint"), equalTo("a,b,$c"));
+            assertThat(parser.attributeNamesToValue, aMapWithSize(3));
+            assertThat(parser.attributeNamesToValue.get("title"), equalTo("T\"A"));
+            assertThat(parser.attributeNamesToValue.get("subtitle"), equalTo("[\\o=D]"));
+            assertThat(parser.attributeNamesToValue.get("hint"), equalTo("a,b,$c"));
         }
 
         @Test
-        void shouldParsePropertyFollowedByComment() {
+        void shouldParseAttributeFollowedByComment() {
             // given / when
             parser.parseHeaderLine("[ width = 20 ] # note: check this", 6);
 
             // then
-            assertThat(parser.propertyNamesToValue, aMapWithSize(1));
-            assertThat(parser.propertyNamesToValue.get("width"), equalTo("20"));
+            assertThat(parser.attributeNamesToValue, aMapWithSize(1));
+            assertThat(parser.attributeNamesToValue.get("width"), equalTo("20"));
         }
 
         @Test
@@ -124,7 +127,7 @@ class DefinitionParserTest {
         }
 
         @Test
-        void shouldThrowForInvalidPropertyNameChars() {
+        void shouldThrowForInvalidAttributeNameChars() {
             // given / when
             IllegalStateException ex1 = assertThrows(IllegalStateException.class,
                 () -> parser.parseHeaderLine("[ wîdth = unset ]", 4));
@@ -168,7 +171,7 @@ class DefinitionParserTest {
                 () -> parser.parseHeaderLine("[ , width = 20 ]", 4));
 
             // then
-            assertThat(ex.getMessage(), equalTo("Expected property identifier ([a-zA-Z0-9_]), but got ',' on line 4, column 3"));
+            assertThat(ex.getMessage(), equalTo("Expected attribute identifier ([a-zA-Z0-9_]), but got ',' on line 4, column 3"));
         }
 
         @Test
@@ -211,12 +214,12 @@ class DefinitionParserTest {
 
             // then
             assertThat(parser.variablesByName, aMapWithSize(2));
-            assertThat(parser.variablesByName.get("keyWidth"), equalTo(new DefinitionParser.ValueVariable("keyWidth", "40")));
-            assertThat(parser.variablesByName.get("keyHeight"), equalTo(new DefinitionParser.ValueVariable("keyHeight", "20px")));
+            assertThat(parser.variablesByName.get("keyWidth"), equalTo(new ValueVariable("keyWidth", "40")));
+            assertThat(parser.variablesByName.get("keyHeight"), equalTo(new ValueVariable("keyHeight", "20px")));
         }
 
         @Test
-        void shouldParsePropertyVariable() {
+        void shouldParseAttributeVariable() {
             // given / when
             parser.parseHeaderLine("$bigKey = [width = 60, height =  54]", 20);
             parser.parseHeaderLine("$smallKey=[width=30px,height=28px]", 21);
@@ -224,16 +227,16 @@ class DefinitionParserTest {
             // then
             assertThat(parser.variablesByName, aMapWithSize(2));
 
-            List<DefinitionParser.Property> expectedBigKeyProperties = List.of(
-                new DefinitionParser.Property("width", "60"),
-                new DefinitionParser.Property("height", "54"));
+            List<Attribute> expectedBigKeyAttributes = List.of(
+                new Attribute("width", "60"),
+                new Attribute("height", "54"));
             assertThat(parser.variablesByName.get("bigKey"),
-                equalTo(new DefinitionParser.PropertyVariable("bigKey", expectedBigKeyProperties)));
-            List<DefinitionParser.Property> expectedSmallKeyProperties = List.of(
-                new DefinitionParser.Property("width", "30px"),
-                new DefinitionParser.Property("height", "28px"));
+                equalTo(new AttributeVariable("bigKey", expectedBigKeyAttributes)));
+            List<Attribute> expectedSmallKeyAttributes = List.of(
+                new Attribute("width", "30px"),
+                new Attribute("height", "28px"));
             assertThat(parser.variablesByName.get("smallKey"),
-                equalTo(new DefinitionParser.PropertyVariable("smallKey", expectedSmallKeyProperties)));
+                equalTo(new AttributeVariable("smallKey", expectedSmallKeyAttributes)));
         }
     }
 }
