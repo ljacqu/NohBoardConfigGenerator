@@ -1,9 +1,9 @@
 package ch.jalu.nohboardconfiggen.definition.parser;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -84,24 +84,23 @@ class DefinitionParserTest {
             assertThat(parser.propertyNamesToValue.get("height"), equalTo("30"));
         }
 
-        // TODO: Escape \$
         @Test
         void shouldHandleEscapesAndNotParseSpecialCharsWithinDoubleQuotes() {
             // given / when
             parser.parseHeaderLine("""
-                [ title="T\\"A", subtitle="[\\\\o=D]", hint="a,b,c" ]""", 8);
+                [ title="T\\"A", subtitle="[\\\\o=D]", hint="a,b,\\$c" ]""", 8);
 
             // then
             assertThat(parser.propertyNamesToValue, aMapWithSize(3));
             assertThat(parser.propertyNamesToValue.get("title"), equalTo("T\"A"));
             assertThat(parser.propertyNamesToValue.get("subtitle"), equalTo("[\\o=D]"));
-            assertThat(parser.propertyNamesToValue.get("hint"), equalTo("a,b,c"));
+            assertThat(parser.propertyNamesToValue.get("hint"), equalTo("a,b,$c"));
         }
 
         @Test
         void shouldParsePropertyFollowedByComment() {
             // given / when
-            parser.parseHeaderLine("[ width = 20 ] # todo: check this", 6);
+            parser.parseHeaderLine("[ width = 20 ] # note: check this", 6);
 
             // then
             assertThat(parser.propertyNamesToValue, aMapWithSize(1));
@@ -205,10 +204,36 @@ class DefinitionParserTest {
         }
 
         @Test
-        @Disabled // TODO: Variable decl. support
-        void shouldParseVariable() {
-            parser.parseHeaderLine("$keyWidth=40px", 20);
+        void shouldParseValueVariable() {
+            // given / when
+            parser.parseHeaderLine("$keyWidth=40", 20);
+            parser.parseHeaderLine("$keyHeight = 20px", 21);
+
+            // then
+            assertThat(parser.variablesByName, aMapWithSize(2));
+            assertThat(parser.variablesByName.get("keyWidth"), equalTo(new DefinitionParser.ValueVariable("keyWidth", "40")));
+            assertThat(parser.variablesByName.get("keyHeight"), equalTo(new DefinitionParser.ValueVariable("keyHeight", "20px")));
+        }
+
+        @Test
+        void shouldParsePropertyVariable() {
+            // given / when
+            parser.parseHeaderLine("$bigKey = [width = 60, height =  54]", 20);
+            parser.parseHeaderLine("$smallKey=[width=30px,height=28px]", 21);
+
+            // then
+            assertThat(parser.variablesByName, aMapWithSize(2));
+
+            List<DefinitionParser.Property> expectedBigKeyProperties = List.of(
+                new DefinitionParser.Property("width", "60"),
+                new DefinitionParser.Property("height", "54"));
+            assertThat(parser.variablesByName.get("bigKey"),
+                equalTo(new DefinitionParser.PropertyVariable("bigKey", expectedBigKeyProperties)));
+            List<DefinitionParser.Property> expectedSmallKeyProperties = List.of(
+                new DefinitionParser.Property("width", "30px"),
+                new DefinitionParser.Property("height", "28px"));
+            assertThat(parser.variablesByName.get("smallKey"),
+                equalTo(new DefinitionParser.PropertyVariable("smallKey", expectedSmallKeyProperties)));
         }
     }
-
 }
