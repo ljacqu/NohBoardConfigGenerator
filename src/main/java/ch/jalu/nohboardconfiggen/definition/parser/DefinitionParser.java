@@ -116,6 +116,11 @@ public class DefinitionParser {
     private Variable parseVariableDeclaration(LineChars lineChars) {
         // '$' was already consumed, so identifier is without the starting '$'
         String identifier = lineChars.nextAllMatching(this::isValidIdentifierChar, false);
+        if (identifier.isEmpty()) {
+            String actual = lineChars.hasNext() ? "'" + lineChars.next() + "'" : "end of line";
+            throw new IllegalStateException("Expected attribute identifier ([a-zA-Z0-9_]), but got "
+                + actual + " on " + lineChars.getLineNrColText());
+        }
 
         // Expect '='
         lineChars.expectCharAfterOptionalWhitespace('=');
@@ -130,12 +135,29 @@ public class DefinitionParser {
         } else if (next == '"') {
             String value = parseTextInDoubleQuotes(lineChars);
             return new ValueVariable(identifier, value);
-        } else if (next == '$') {
-            // todo var support
-            return null;
         } else {
             String value = parseSimpleText(lineChars);
             return new ValueVariable(identifier, value);
+        }
+    }
+
+    private String parseAndResolveVariableValue(LineChars lineChars) {
+        // '$' already consumed
+        String identifier = lineChars.nextAllMatching(this::isValidIdentifierChar, false);
+        if (identifier.isEmpty()) {
+            String actual = lineChars.hasNext() ? "'" + lineChars.next() + "'" : "end of line";
+            throw new IllegalStateException("Expected attribute identifier ([a-zA-Z0-9_]), but got "
+                + actual + " on " + lineChars.getLineNrColText());
+        }
+
+        Variable variable = variablesByName.get(identifier);
+        if (variable instanceof ValueVariable vv) {
+            return vv.value();
+        } else if (variable instanceof AttributeVariable) {
+            throw new IllegalStateException("Invalid variable usage of $" + identifier
+                + ": variable contains attribute(s), not a value!");
+        } else {
+            throw new IllegalStateException("Unknown variable: $" + identifier);
         }
     }
 
@@ -148,12 +170,15 @@ public class DefinitionParser {
 
         chr = lineChars.next();
         while (true) {
-            if (chr == '"') {
+            if (chr == '$') {
+                value.append(parseAndResolveVariableValue(lineChars));
+            } else if (chr == '"') {
                 break;
             } else if (chr == '\\') {
-                chr = handleBackslashEscape(lineChars);
+                value.append(handleBackslashEscape(lineChars));
+            } else {
+                value.append(chr);
             }
-            value.append(chr);
 
             if (lineChars.hasNext()) {
                 chr = lineChars.next();
@@ -191,7 +216,12 @@ public class DefinitionParser {
     }
 
     private String parseSimpleText(LineChars lineChars) {
-        String value = lineChars.nextAllMatching(chr -> isValidIdentifierChar(chr), false);
+        if (lineChars.peek() == '$') {
+            lineChars.next();
+            return parseAndResolveVariableValue(lineChars);
+        }
+
+        String value = lineChars.nextAllMatching(this::isValidIdentifierChar, false);
         if (value.isEmpty()) {
             throw new IllegalStateException("Unexpected character '" + lineChars.peek() + "' on "
                 + lineChars.getLineNrColText() + ". Use double quotes around complex values");

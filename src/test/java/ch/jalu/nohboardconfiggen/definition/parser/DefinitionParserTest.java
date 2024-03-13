@@ -238,5 +238,61 @@ class DefinitionParserTest {
             assertThat(parser.variablesByName.get("smallKey"),
                 equalTo(new AttributeVariable("smallKey", expectedSmallKeyAttributes)));
         }
+
+        @Test
+        void shouldParseAttributeWithVariableValue() {
+            // given
+            parser.parseHeaderLine("$width = 40", 1);
+
+            // when
+            parser.parseHeaderLine("[width = $width]", 2);
+
+            // then
+            assertThat(parser.attributeNamesToValue, aMapWithSize(1));
+            assertThat(parser.attributeNamesToValue.get("width"), equalTo("40"));
+        }
+
+        @Test
+        void shouldParseVariableDeclarationWithVariable() {
+            // given
+            parser.parseHeaderLine("$suffix = \"You know?\"", 1);
+
+            // when
+            parser.parseHeaderLine("$statement = \"Crazy. $suffix\"", 2);
+
+            // then
+            assertThat(parser.variablesByName, aMapWithSize(2));
+            assertThat(parser.variablesByName.get("suffix"), equalTo(new ValueVariable("suffix", "You know?")));
+            assertThat(parser.variablesByName.get("statement"), equalTo(new ValueVariable("statement", "Crazy. You know?")));
+        }
+
+        @Test
+        void shouldThrowForEmptyVariableName() {
+            // given / when
+            IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> parser.parseHeaderLine("$ = 5", 2));
+
+            // then
+            assertThat(ex.getMessage(), equalTo("Expected attribute identifier ([a-zA-Z0-9_]), but got ' ' on line 2, column 2"));
+        }
+
+        @Test
+        void shouldThrowForInvalidVariableAssignmentSyntax() {
+            // given / when
+            IllegalStateException ex1 = assertThrows(IllegalStateException.class,
+                () -> parser.parseHeaderLine("$test =", 2));
+            IllegalStateException ex2 = assertThrows(IllegalStateException.class,
+                () -> parser.parseHeaderLine("$test = abc def", 3));
+            IllegalStateException ex3 = assertThrows(IllegalStateException.class,
+                () -> parser.parseHeaderLine("$test : 50", 4));
+            IllegalStateException ex4 = assertThrows(IllegalStateException.class,
+                () -> parser.parseHeaderLine("$test", 5));
+
+            // then
+            assertThat(ex1.getMessage(), equalTo("Unexpected end of line on line 2"));
+            assertThat(ex2.getMessage(), equalTo("Expected end of line, but got 'd' on line 3, column 13"));
+            assertThat(ex3.getMessage(), equalTo("Expected '=' but got ':' on line 4, column 7"));
+            assertThat(ex4.getMessage(), equalTo("Unexpected end of line on line 5"));
+        }
     }
 }
