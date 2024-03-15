@@ -1,18 +1,25 @@
 package ch.jalu.nohboardconfiggen.definition.parser;
 
 import ch.jalu.nohboardconfiggen.definition.parser.element.Attribute;
+import ch.jalu.nohboardconfiggen.definition.parser.element.KeyLine;
+import ch.jalu.nohboardconfiggen.definition.parser.element.KeyNameSet;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Variable.AttributeVariable;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Variable.ValueVariable;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
 import static org.hamcrest.Matchers.anEmptyMap;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -293,6 +300,69 @@ class DefinitionParserTest {
             assertThat(ex2.getMessage(), equalTo("Expected end of line, but got 'd' on line 3, column 13"));
             assertThat(ex3.getMessage(), equalTo("Expected '=' but got ':' on line 4, column 7"));
             assertThat(ex4.getMessage(), equalTo("Unexpected end of line on line 5"));
+        }
+    }
+
+    @Nested
+    class KeyLineParse {
+
+        @Test
+        void shouldIgnoreEmptyLineOrLineWithComment() {
+            // given / when / then
+            assertThat(parser.parseKeyLine("", 1), nullValue());
+            assertThat(parser.parseKeyLine("   ", 2), nullValue());
+            assertThat(parser.parseKeyLine("# test", 3), nullValue());
+            assertThat(parser.parseKeyLine("    # test", 4), nullValue());
+        }
+
+        @Test
+        void shouldParseSimpleKeyDefinitions() {
+            // given / when
+            KeyLine key1 = parser.parseKeyLine("Jump Space", 11);
+            KeyLine key2 = parser.parseKeyLine("Crouch LeftCtrl RightCtrl ", 12);
+            KeyLine key3 = parser.parseKeyLine("Sprint  /  # comment", 13);
+
+            // then
+            assertThat(key1.displayText(), equalTo("Jump"));
+            assertThat(key1.keys(), contains(new KeyNameSet("Space")));
+            assertThat(key1.attributes(), empty());
+
+            assertThat(key2.displayText(), equalTo("Crouch"));
+            assertThat(key2.keys(), containsInAnyOrder(new KeyNameSet("LeftCtrl"), new KeyNameSet("RightCtrl")));
+            assertThat(key2.attributes(), empty());
+
+            assertThat(key3.displayText(), equalTo("Sprint"));
+            assertThat(key3.keys(), contains(new KeyNameSet("/")));
+            assertThat(key3.attributes(), empty());
+        }
+
+        @Test
+        void shouldParseKeyDefinitionWithAttribute() {
+            // given / when
+            KeyLine key1 = parser.parseKeyLine("Jump Space [width = 20px]", 15);
+            KeyLine key2 = parser.parseKeyLine("Crouch Ctrl [height = 40, dark = true]", 16);
+
+            // then
+            assertThat(key1.displayText(), equalTo("Jump"));
+            assertThat(key1.attributes(), contains(new Attribute("width", "20px")));
+            assertThat(key2.displayText(), equalTo("Crouch"));
+            assertThat(key2.attributes(), contains(new Attribute("height", "40"), new Attribute("dark", "true")));
+        }
+
+        @Test
+        void shouldParseDefinitionWithMultipleKeys() {
+            // given / when
+            KeyLine key1 = parser.parseKeyLine("Econ LeftAlt & R RightAlt & R", 20);
+            KeyLine key2 = parser.parseKeyLine("Grid Alt & Shift & G [color=red]", 21);
+
+            // then
+            assertThat(key1.displayText(), equalTo("Econ"));
+            assertThat(key1.keys(), contains(new KeyNameSet(Set.of("LeftAlt", "R")), new KeyNameSet(Set.of("RightAlt", "R"))));
+            assertThat(key1.attributes(), empty());
+
+            assertThat(key2.displayText(), equalTo("Grid"));
+            assertThat(key2.keys(), contains(new KeyNameSet(Set.of("Alt", "Shift", "G"))));
+            assertThat(key2.attributes(), contains(new Attribute("color", "red")));
         }
     }
 }

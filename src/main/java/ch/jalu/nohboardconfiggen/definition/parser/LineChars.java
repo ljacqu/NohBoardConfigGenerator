@@ -17,14 +17,14 @@ class LineChars {
         if (pos < chars.length) {
             return chars[pos];
         }
-        throw new IllegalStateException("Unexpected end of line on line " + lineNumber);
+        throw new IllegalStateException("Unexpected end of line on " + getLineNrText());
     }
 
     char next() {
         if (pos < chars.length) {
             return chars[pos++];
         }
-        throw new IllegalStateException("Unexpected end of line on line " + lineNumber);
+        throw new IllegalStateException("Unexpected end of line on " + getLineNrText());
     }
 
     char nextNonWhitespace() {
@@ -57,7 +57,7 @@ class LineChars {
         }
         int endExclusive = pos;
         if (start == endExclusive && !hasNext()) {
-            throw new IllegalStateException("Unexpected end of line on line " + lineNumber);
+            throw new IllegalStateException("Unexpected end of line on " + getLineNrText());
         }
 
         char[] matchingChars = new char[endExclusive - start];

@@ -1,6 +1,9 @@
 package ch.jalu.nohboardconfiggen.definition.parser;
 
 import ch.jalu.nohboardconfiggen.definition.parser.element.Attribute;
+import ch.jalu.nohboardconfiggen.definition.parser.element.KeyLine;
+import ch.jalu.nohboardconfiggen.definition.parser.element.KeyNameSet;
+import ch.jalu.nohboardconfiggen.definition.parser.element.KeyRow;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Variable;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Variable.AttributeVariable;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Variable.ValueVariable;
@@ -8,25 +11,41 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class DefinitionParser {
 
     final Map<String, String> attributeNamesToValue = new HashMap<>();
     final Map<String, Variable> variablesByName = new HashMap<>();
+    final List<KeyRow> keyRows = new ArrayList<>();
 
 
     public void parse(List<String> lines) {
         int lineNumber = 1;
         boolean isHeaderSection = true;
+        KeyRow currentRow = new KeyRow();
+
         for (String line : lines) {
             if (isHeaderSection) {
                 isHeaderSection = !parseHeaderLine(line, lineNumber);
             } else {
-                // TODO keys declaration
+                KeyLine key = parseKeyLine(line, lineNumber);
+                if (key != null) {
+                    currentRow.add(key);
+                } else {
+                    if (!currentRow.isEmpty()) {
+                        keyRows.add(currentRow);
+                        currentRow = new KeyRow();
+                    }
+                }
             }
             ++lineNumber;
+        }
+        if (!currentRow.isEmpty()) {
+            keyRows.add(currentRow);
         }
     }
 
@@ -52,6 +71,96 @@ public class DefinitionParser {
         }
 
         return false;
+    }
+
+    @VisibleForTesting
+    KeyLine parseKeyLine(String line, int lineNumber) {
+        LineChars lineChars = new LineChars(line, lineNumber);
+        lineChars.skipWhitespace();
+
+        if (!lineChars.hasNext()) {
+            return null;
+        }
+
+        String keyName;
+        char next = lineChars.peek();
+        if (next == '#') {
+            return null;
+        } else if (next == '"') {
+            keyName = parseTextInDoubleQuotes(lineChars);
+        } else {
+            keyName = parseUnquotedKeyName(lineChars);
+        }
+
+        // After key name, expect keys or attributes
+        List<Attribute> attributes = new ArrayList<>();
+        List<KeyNameSet> keys = new ArrayList<>();
+
+        lineChars.skipWhitespace();
+        while (lineChars.hasNext()) {
+            char chr = lineChars.peek();
+            if (chr == '[') {
+                lineChars.next();
+                attributes.addAll(parseAttributeDeclaration(lineChars));
+            } else if (chr == '#') {
+                break;
+            } else {
+                keys.add(parseKeyBinding(lineChars));
+            }
+
+            lineChars.skipWhitespace();
+        }
+
+        return new KeyLine(keyName, keys, attributes);
+    }
+
+    private String parseUnquotedKeyName(LineChars lineChars) {
+        // Key name
+        StringBuilder keyName = new StringBuilder();
+        while (lineChars.hasNext() && !Character.isWhitespace(lineChars.peek())) {
+            char chr = lineChars.next();
+            if (chr == '$') {
+                keyName.append(parseAndResolveVariableValue(lineChars));
+            } else if (chr == '\\') {
+                keyName.append(handleBackslashEscape(lineChars));
+            } else {
+                keyName.append(chr);
+            }
+        }
+        return keyName.toString();
+    }
+
+    private KeyNameSet parseKeyBinding(LineChars lineChars) {
+        Set<String> keyNames = new HashSet<>();
+        while (true) {
+            String keyName = parseKeyName(lineChars);
+            keyNames.add(keyName);
+
+            lineChars.skipWhitespace();
+            if (!lineChars.hasNext() || lineChars.peek() != '&') {
+                break;
+            } else {
+                lineChars.next(); // '&'
+                lineChars.skipWhitespace();
+                // TODO: This is hacky
+                if (!lineChars.hasNext() || lineChars.peek() == '&' || lineChars.peek() == '[') {
+                    String next = lineChars.hasNext() ? "'" + lineChars.next() + "'" : "end of line";
+                    throw new IllegalStateException("After ampersand, expect another key, but got "
+                        + next + " on " + lineChars.getLineNrColText());
+                }
+            }
+        }
+
+        return new KeyNameSet(keyNames);
+    }
+
+    private String parseKeyName(LineChars lineChars) {
+        if (lineChars.peek() == '"') {
+            return parseTextInDoubleQuotes(lineChars);
+        } else {
+            // TODO: Variables?
+            return lineChars.nextAllMatching(chr -> !Character.isWhitespace(chr), false);
+        }
     }
 
     private boolean isValidIdentifierChar(char c) {
