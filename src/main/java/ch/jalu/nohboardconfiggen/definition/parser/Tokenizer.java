@@ -2,13 +2,13 @@ package ch.jalu.nohboardconfiggen.definition.parser;
 
 import java.util.function.Predicate;
 
-class LineChars {
+class Tokenizer {
 
     private final int lineNumber;
     private final char[] chars;
     private int pos;
 
-    LineChars(String line, int lineNumber) {
+    Tokenizer(String line, int lineNumber) {
         this.chars = line.toCharArray();
         this.lineNumber = lineNumber;
     }
@@ -75,6 +75,10 @@ class LineChars {
 
     boolean hasNext() {
         return pos < chars.length;
+    }
+
+    boolean isEmptyOrHasCommentStart() {
+        return !hasNext() || chars[pos] == '#';
     }
 
     String getLineNrText() {
