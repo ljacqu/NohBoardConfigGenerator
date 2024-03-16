@@ -4,6 +4,8 @@ import ch.jalu.nohboardconfiggen.definition.parser.element.Attribute;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyLine;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyNameSet;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyRow;
+import ch.jalu.nohboardconfiggen.definition.parser.element.KeyboardLineParseResult;
+import ch.jalu.nohboardconfiggen.definition.parser.element.KeyboardRowEnd;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Variable;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Variable.AttributeVariable;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Variable.ValueVariable;
@@ -32,14 +34,12 @@ public class DefinitionParser {
             if (isHeaderSection) {
                 isHeaderSection = !parseHeaderLine(line, lineNumber);
             } else {
-                KeyLine key = parseKeyLine(line, lineNumber);
-                if (key != null) {
-                    currentRow.add(key);
-                } else {
-                    if (!currentRow.isEmpty()) {
-                        keyRows.add(currentRow);
-                        currentRow = new KeyRow();
-                    }
+                KeyboardLineParseResult key = parseKeyLine(line, lineNumber);
+                if (key instanceof KeyboardRowEnd && !currentRow.isEmpty()) {
+                    keyRows.add(currentRow);
+                    currentRow = new KeyRow();
+                } else if (key instanceof KeyLine keyLine) {
+                    currentRow.add(keyLine);
                 }
             }
             ++lineNumber;
@@ -74,11 +74,12 @@ public class DefinitionParser {
     }
 
     @VisibleForTesting
-    KeyLine parseKeyLine(String line, int lineNumber) {
+    KeyboardLineParseResult parseKeyLine(String line, int lineNumber) {
         Tokenizer tokenizer = new Tokenizer(line, lineNumber);
         tokenizer.skipWhitespace();
-
-        if (tokenizer.isEmptyOrHasCommentStart()) {
+        if (!tokenizer.hasNext()) {
+            return new KeyboardRowEnd();
+        } else if (tokenizer.peek() == '#') {
             return null;
         }
 
@@ -102,6 +103,16 @@ public class DefinitionParser {
                 attributes.addAll(parseAttributeDeclaration(tokenizer));
             } else if (chr == '#') {
                 break;
+            } else if (chr == '$') {
+                tokenizer.next();
+                Variable v = variablesByName.get(parseVariableIdentifier(tokenizer));
+                if (v instanceof AttributeVariable av) {
+                    attributes.addAll(av.attributes());
+                } else {
+                    // TODO: Text variables cannot be used as key aliases
+                    throw new IllegalStateException(
+                        "Variable is not an attribute variable on " + tokenizer.getLineNrColText());
+                }
             } else {
                 keys.add(parseKeyBinding(tokenizer));
             }
@@ -263,13 +274,7 @@ public class DefinitionParser {
     }
 
     private String parseAndResolveVariableValue(Tokenizer tokenizer) {
-        // '$' already consumed
-        String identifier = tokenizer.nextAllMatching(this::isValidIdentifierChar, false);
-        if (identifier.isEmpty()) {
-            String actual = tokenizer.hasNext() ? "'" + tokenizer.next() + "'" : "end of line";
-            throw new IllegalStateException("Expected attribute identifier ([a-zA-Z0-9_]), but got "
-                + actual + " on " + tokenizer.getLineNrColText());
-        }
+        String identifier = parseVariableIdentifier(tokenizer);
 
         Variable variable = variablesByName.get(identifier);
         if (variable instanceof ValueVariable vv) {
@@ -280,6 +285,17 @@ public class DefinitionParser {
         } else {
             throw new IllegalStateException("Unknown variable: $" + identifier);
         }
+    }
+
+    private String parseVariableIdentifier(Tokenizer tokenizer) {
+        // '$' already consumed
+        String identifier = tokenizer.nextAllMatching(this::isValidIdentifierChar, false);
+        if (identifier.isEmpty()) {
+            String actual = tokenizer.hasNext() ? "'" + tokenizer.next() + "'" : "end of line";
+            throw new IllegalStateException("Expected attribute identifier ([a-zA-Z0-9_]), but got "
+                + actual + " on " + tokenizer.getLineNrColText());
+        }
+        return identifier;
     }
 
     private String parseTextInDoubleQuotes(Tokenizer tokenizer) {
@@ -318,8 +334,9 @@ public class DefinitionParser {
                 && Character.toLowerCase(tokenizer.next()) == 's') {
             tokenizer.expectCharAfterOptionalWhitespace(':');
             expectEndOfContent(tokenizer);
+        } else {
+            throw new IllegalStateException("Invalid syntax on " + tokenizer.getLineNrText());
         }
-        throw new IllegalStateException("Invalid syntax on " + tokenizer.getLineNrText());
     }
 
     private void expectEndOfContent(Tokenizer tokenizer) {

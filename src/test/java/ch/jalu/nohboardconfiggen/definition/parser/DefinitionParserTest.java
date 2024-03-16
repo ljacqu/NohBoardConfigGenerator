@@ -3,13 +3,19 @@ package ch.jalu.nohboardconfiggen.definition.parser;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Attribute;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyLine;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyNameSet;
+import ch.jalu.nohboardconfiggen.definition.parser.element.KeyRow;
+import ch.jalu.nohboardconfiggen.definition.parser.element.KeyboardRowEnd;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Variable.AttributeVariable;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Variable.ValueVariable;
+import com.google.common.collect.Iterables;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -19,6 +25,8 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -307,10 +315,10 @@ class DefinitionParserTest {
     class KeyLineParse {
 
         @Test
-        void shouldIgnoreEmptyLineOrLineWithComment() {
+        void shouldProcessEmptyLineOrLineWithComment() {
             // given / when / then
-            assertThat(parser.parseKeyLine("", 1), nullValue());
-            assertThat(parser.parseKeyLine(" \t  ", 2), nullValue());
+            assertThat(parser.parseKeyLine("", 1), instanceOf(KeyboardRowEnd.class));
+            assertThat(parser.parseKeyLine(" \t  ", 2), instanceOf(KeyboardRowEnd.class));
             assertThat(parser.parseKeyLine("# test", 3), nullValue());
             assertThat(parser.parseKeyLine("    # test", 4), nullValue());
         }
@@ -318,9 +326,9 @@ class DefinitionParserTest {
         @Test
         void shouldParseSimpleKeyDefinitions() {
             // given / when
-            KeyLine key1 = parser.parseKeyLine("Jump Space", 11);
-            KeyLine key2 = parser.parseKeyLine("Crouch LeftCtrl RightCtrl ", 12);
-            KeyLine key3 = parser.parseKeyLine("Sprint  /  # comment", 13);
+            KeyLine key1 = (KeyLine) parser.parseKeyLine("Jump Space", 11);
+            KeyLine key2 = (KeyLine) parser.parseKeyLine("Crouch LeftCtrl RightCtrl ", 12);
+            KeyLine key3 = (KeyLine) parser.parseKeyLine("Sprint  /  # comment", 13);
 
             // then
             assertThat(key1.displayText(), equalTo("Jump"));
@@ -339,9 +347,9 @@ class DefinitionParserTest {
         @Test
         void shouldParseKeyDefinitionWithAttribute() {
             // given / when
-            KeyLine key1 = parser.parseKeyLine("Jump Space [width = 20px]", 15);
-            KeyLine key2 = parser.parseKeyLine("Crouch Ctrl [height = 40, dark = true]", 16);
-            KeyLine key3 = parser.parseKeyLine("Action E [width=20][height=40px]", 16);
+            KeyLine key1 = (KeyLine) parser.parseKeyLine("Jump Space [width = 20px]", 15);
+            KeyLine key2 = (KeyLine) parser.parseKeyLine("Crouch Ctrl [height = 40, dark = true]", 16);
+            KeyLine key3 = (KeyLine) parser.parseKeyLine("Action E [width=20][height=40px]", 16);
 
             // then
             assertThat(key1.displayText(), equalTo("Jump"));
@@ -360,25 +368,25 @@ class DefinitionParserTest {
         @Test
         void shouldParseDefinitionWithMultipleKeys() {
             // given / when
-            KeyLine key1 = parser.parseKeyLine("Econ LeftAlt & R RightAlt & R", 20);
-            KeyLine key2 = parser.parseKeyLine("Grid Alt & Shift & G [color=red]", 21);
+            KeyLine key1 = (KeyLine) parser.parseKeyLine("Econ LeftAlt & R RightAlt & R", 20);
+            KeyLine key2 = (KeyLine) parser.parseKeyLine("Grid Alt & Shift & G [color=red]", 21);
 
             // then
             assertThat(key1.displayText(), equalTo("Econ"));
-            assertThat(key1.keys(), contains(new KeyNameSet(Set.of("LeftAlt", "R")), new KeyNameSet(Set.of("RightAlt", "R"))));
+            assertThat(key1.keys(), contains(new KeyNameSet("LeftAlt", "R"), new KeyNameSet("RightAlt", "R")));
             assertThat(key1.attributes(), empty());
 
             assertThat(key2.displayText(), equalTo("Grid"));
-            assertThat(key2.keys(), contains(new KeyNameSet(Set.of("Alt", "Shift", "G"))));
+            assertThat(key2.keys(), contains(new KeyNameSet("Alt", "Shift", "G")));
             assertThat(key2.attributes(), contains(new Attribute("color", "red")));
         }
 
         @Test
         void shouldParseDefinitionWithDoubleQuotes() {
             // given / when
-            KeyLine key1 = parser.parseKeyLine("\"A b\" H", 1);
-            KeyLine key2 = parser.parseKeyLine("Jump  \"LeftShift\" [width = \"30px\"]", 2);
-            KeyLine key3 = parser.parseKeyLine("Econ \"LeftAlt\" & \"R\"", 3);
+            KeyLine key1 = (KeyLine) parser.parseKeyLine("\"A b\" H", 1);
+            KeyLine key2 = (KeyLine) parser.parseKeyLine("Jump  \"LeftShift\" [width = \"30px\"]", 2);
+            KeyLine key3 = (KeyLine) parser.parseKeyLine("Econ \"LeftAlt\" & \"R\"", 3);
 
             // then
             assertThat(key1.displayText(), equalTo("A b"));
@@ -390,7 +398,7 @@ class DefinitionParserTest {
             assertThat(key2.attributes(), contains(new Attribute("width", "30px")));
 
             assertThat(key3.displayText(), equalTo("Econ"));
-            assertThat(key3.keys(), contains(new KeyNameSet(Set.of("LeftAlt", "R"))));
+            assertThat(key3.keys(), contains(new KeyNameSet("LeftAlt", "R")));
             assertThat(key3.attributes(), empty());
         }
 
@@ -402,8 +410,8 @@ class DefinitionParserTest {
             parser.parseHeaderLine("$medium = 30px ", 3);
 
             // when
-            KeyLine key1 = parser.parseKeyLine("$action E [width=$small, height=$small]", 10);
-            KeyLine key2 = parser.parseKeyLine("Jump Space [width=$medium]", 11);
+            KeyLine key1 = (KeyLine) parser.parseKeyLine("$action E [width=$small, height=$small]", 10);
+            KeyLine key2 = (KeyLine) parser.parseKeyLine("Jump Space [width=$medium]", 11);
 
             // then
             assertThat(key1.displayText(), equalTo("Grab"));
@@ -413,6 +421,25 @@ class DefinitionParserTest {
             assertThat(key2.displayText(), equalTo("Jump"));
             assertThat(key2.keys(), contains(new KeyNameSet("Space")));
             assertThat(key2.attributes(), contains(new Attribute("width", "30px")));
+        }
+
+        @Test
+        void shouldResolveAttributeVariables() {
+            // given
+            parser.parseHeaderLine("$small = [width=20, height=20]", 1);
+
+            // when
+            KeyLine key1 = (KeyLine) parser.parseKeyLine("Action LeftCtrl $small", 1);
+            KeyLine key2 = (KeyLine) parser.parseKeyLine("Walk LeftShift $small [style=bold]", 1);
+
+            // then
+            assertThat(key1.displayText(), equalTo("Action"));
+            assertThat(key1.keys(), contains(new KeyNameSet("LeftCtrl")));
+            assertThat(key1.attributes(), contains(new Attribute("width", "20"), new Attribute("height", "20")));
+
+            assertThat(key2.displayText(), equalTo("Walk"));
+            assertThat(key2.keys(), contains(new KeyNameSet("LeftShift")));
+            assertThat(key2.attributes(), contains(new Attribute("width", "20"), new Attribute("height", "20"), new Attribute("style", "bold")));
         }
 
         @Test
@@ -436,5 +463,157 @@ class DefinitionParserTest {
             assertThat(ex4.getMessage(), equalTo("After ampersand, expect another key, but got '[' on line 1, column 9"));
             assertThat(ex5.getMessage(), equalTo("Unexpected '#' on line 1, column 8. Wrap complex names in double quotes"));
         }
+    }
+
+    @Test
+    void shouldParse() {
+        // given / when
+        parser.parse(List.of(
+            "[width=35]",
+            "[keyboard=de]",
+            "",
+            "Keys:",
+            "# Faking WASD: arrow keys are mapped",
+            "W ArrowUp [marginLeft=1k]",
+            "",
+            "A ArrowLeft",
+            "S ArrowDown",
+            "D ArrowRight",
+            "",
+            "Jump Space [width=3]"
+        ));
+
+        // then
+        assertThat(parser.attributeNamesToValue, aMapWithSize(2));
+        assertThat(parser.attributeNamesToValue.get("width"), equalTo("35"));
+        assertThat(parser.attributeNamesToValue.get("keyboard"), equalTo("de"));
+
+        assertThat(parser.keyRows, hasSize(3));
+        KeyRow row1 = parser.keyRows.get(0);
+        assertThat(row1, hasSize(1));
+        assertThat(row1.get(0), isKey("W", "ArrowUp"));
+        assertThat(row1.get(0).attributes(), contains(new Attribute("marginLeft", "1k")));
+
+        KeyRow row2 = parser.keyRows.get(1);
+        assertThat(row2, hasSize(3));
+        assertThat(row2.get(0), isKey("A", "ArrowLeft"));
+        assertThat(row2.get(1), isKey("S", "ArrowDown"));
+        assertThat(row2.get(2), isKey("D", "ArrowRight"));
+        row2.forEach(key -> assertThat(key.attributes(), empty()));
+
+        KeyRow row3 = parser.keyRows.get(2);
+        assertThat(row3, hasSize(1));
+        assertThat(row3.get(0), isKey("Jump", "Space"));
+        assertThat(row3.get(0).attributes(), contains(new Attribute("width", "3")));
+    }
+
+    @Test
+    void shouldParse2() {
+        // given / when
+        parser.parse(List.of(
+            "Keys:",
+            "",
+            "  Flashlight Q Num1",
+            "  Grenade W Num2",
+            "  Action E Num3",
+            "",
+            "  Jump A Num4",
+            "  # Change text?",
+            "  Toggle S Num5",
+            "  \"U. D.\" D Num6"
+        ));
+
+        // then
+        assertThat(parser.attributeNamesToValue, anEmptyMap());
+
+        assertThat(parser.keyRows, hasSize(2));
+        KeyRow row1 = parser.keyRows.get(0);
+        assertThat(row1, hasSize(3));
+        assertThat(row1.get(0), isKey("Flashlight", "Q", "Num1"));
+        assertThat(row1.get(1), isKey("Grenade", "W", "Num2"));
+        assertThat(row1.get(2), isKey("Action", "E", "Num3"));
+
+        KeyRow row2 = parser.keyRows.get(1);
+        assertThat(row2, hasSize(3));
+        assertThat(row2.get(0), isKey("Jump", "A", "Num4"));
+        assertThat(row2.get(1), isKey("Toggle", "S", "Num5"));
+        assertThat(row2.get(2), isKey("U. D.", "D", "Num6"));
+
+        parser.keyRows.stream()
+            .flatMap(row -> row.stream())
+            .forEach(keyLine -> assertThat(keyLine.attributes(), empty()));
+    }
+
+    @Test
+    void shouldParse3() {
+        // given / when
+        parser.parse(List.of(
+            "# Set some attributes",
+            "[keyboard=\"en-us\"]",
+            "[width=40]",
+            "",
+            "# Variables",
+            "$smallKey = [width=20, height=20]",
+            "$prefix = \"\\$\"",
+            "",
+            "Keys:",
+            "",
+            "  \"$prefix 1\" Q    $smallKey",
+            "  \"$prefix 2\" W    $smallKey [marginLeft=5px]",
+            "  \"$prefix 2b\" W & E",
+            ""
+        ));
+
+        // then
+        assertThat(parser.attributeNamesToValue, aMapWithSize(2));
+        assertThat(parser.attributeNamesToValue.get("keyboard"), equalTo("en-us"));
+        assertThat(parser.attributeNamesToValue.get("width"), equalTo("40"));
+
+        assertThat(parser.keyRows, hasSize(1));
+        KeyRow row = parser.keyRows.get(0);
+        assertThat(row, hasSize(3));
+
+        assertThat(row.get(0), isKey("$ 1", "Q"));
+        assertThat(row.get(0).attributes(), contains(new Attribute("width", "20"), new Attribute("height", "20")));
+
+        assertThat(row.get(1), isKey("$ 2", "W"));
+        assertThat(row.get(1).attributes(), contains(new Attribute("width", "20"), new Attribute("height", "20"), new Attribute("marginLeft", "5px")));
+
+        assertThat(row.get(2).displayText(), equalTo("$ 2b"));
+        assertThat(row.get(2).keys(), contains(new KeyNameSet("W", "E")));
+        assertThat(row.get(2).attributes(), empty());
+    }
+
+    private static Matcher<KeyLine> isKey(String displayText, String... individualKeyBinds) {
+        return new TypeSafeMatcher<>() {
+            @Override
+            protected boolean matchesSafely(KeyLine keyLine) {
+                if (!equalTo(displayText).matches(keyLine.displayText())) {
+                    return false;
+                }
+
+                List<String> keyBindings = keyLine.keys().stream()
+                    .map(keyNameSet -> {
+                        if (keyNameSet.keys().size() != 1) {
+                            throw new IllegalArgumentException(
+                                "The given key has key binding combinations; this matcher cannot be used for it");
+                        }
+                        return Iterables.getOnlyElement(keyNameSet.keys());
+                    }).toList();
+                return contains(individualKeyBinds).matches(keyBindings);
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description.appendText("KeyLine[displayText=" + displayText + ", keys="
+                    + Arrays.toString(individualKeyBinds) + "]");
+            }
+
+            @Override
+            protected void describeMismatchSafely(KeyLine item, Description mismatchDescription) {
+                mismatchDescription.appendText("KeyLine[displayText=" + item.displayText() + ", keys="
+                    + item.keys() + "]");
+            }
+        };
     }
 }
