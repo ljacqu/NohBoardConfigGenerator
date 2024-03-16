@@ -131,7 +131,7 @@ public class DefinitionParser {
     private KeyNameSet parseKeyBinding(Tokenizer tokenizer) {
         Set<String> keyNames = new HashSet<>();
         while (true) {
-            String keyName = parseKeyName(tokenizer);
+            String keyName = parseKeyBindingName(tokenizer);
             keyNames.add(keyName);
 
             tokenizer.skipWhitespace();
@@ -152,12 +152,26 @@ public class DefinitionParser {
         return new KeyNameSet(keyNames);
     }
 
-    private String parseKeyName(Tokenizer tokenizer) {
-        if (tokenizer.peek() == '"') {
+    private String parseKeyBindingName(Tokenizer tokenizer) {
+        char nextChar = tokenizer.peek();
+        if (nextChar == '"') {
             return parseTextInDoubleQuotes(tokenizer);
+        } else if (isValidIdentifierChar(nextChar)) {
+            return tokenizer.nextAllMatching(this::isValidIdentifierChar, false);
         } else {
-            // TODO: Variables?
-            return tokenizer.nextAllMatching(chr -> !Character.isWhitespace(chr), false);
+            if (nextChar == '&' || nextChar == '$' || nextChar == '#') {
+                throw new IllegalStateException("Unexpected '" + nextChar + "' on " + tokenizer.getLineNrColText()
+                    + ". Wrap complex names in double quotes");
+            }
+            char keyChar = tokenizer.next();
+            if (tokenizer.hasNext()) {
+                char followingChar = tokenizer.peek();
+                if (!Character.isWhitespace(followingChar) && followingChar != '&') {
+                    throw new IllegalStateException("Invalid key name on " + tokenizer.getLineNrColText()
+                        + ". Wrap complex names in double quotes");
+                }
+            }
+            return String.valueOf(keyChar);
         }
     }
 

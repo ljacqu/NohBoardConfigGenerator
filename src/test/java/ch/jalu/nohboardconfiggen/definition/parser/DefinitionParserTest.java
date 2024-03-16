@@ -310,7 +310,7 @@ class DefinitionParserTest {
         void shouldIgnoreEmptyLineOrLineWithComment() {
             // given / when / then
             assertThat(parser.parseKeyLine("", 1), nullValue());
-            assertThat(parser.parseKeyLine("   ", 2), nullValue());
+            assertThat(parser.parseKeyLine(" \t  ", 2), nullValue());
             assertThat(parser.parseKeyLine("# test", 3), nullValue());
             assertThat(parser.parseKeyLine("    # test", 4), nullValue());
         }
@@ -341,12 +341,20 @@ class DefinitionParserTest {
             // given / when
             KeyLine key1 = parser.parseKeyLine("Jump Space [width = 20px]", 15);
             KeyLine key2 = parser.parseKeyLine("Crouch Ctrl [height = 40, dark = true]", 16);
+            KeyLine key3 = parser.parseKeyLine("Action E [width=20][height=40px]", 16);
 
             // then
             assertThat(key1.displayText(), equalTo("Jump"));
+            assertThat(key1.keys(), contains(new KeyNameSet("Space")));
             assertThat(key1.attributes(), contains(new Attribute("width", "20px")));
+
             assertThat(key2.displayText(), equalTo("Crouch"));
+            assertThat(key2.keys(), contains(new KeyNameSet("Ctrl")));
             assertThat(key2.attributes(), contains(new Attribute("height", "40"), new Attribute("dark", "true")));
+
+            assertThat(key3.displayText(), equalTo("Action"));
+            assertThat(key3.keys(), contains(new KeyNameSet("E")));
+            assertThat(key3.attributes(), contains(new Attribute("width", "20"), new Attribute("height", "40px")));
         }
 
         @Test
@@ -363,6 +371,70 @@ class DefinitionParserTest {
             assertThat(key2.displayText(), equalTo("Grid"));
             assertThat(key2.keys(), contains(new KeyNameSet(Set.of("Alt", "Shift", "G"))));
             assertThat(key2.attributes(), contains(new Attribute("color", "red")));
+        }
+
+        @Test
+        void shouldParseDefinitionWithDoubleQuotes() {
+            // given / when
+            KeyLine key1 = parser.parseKeyLine("\"A b\" H", 1);
+            KeyLine key2 = parser.parseKeyLine("Jump  \"LeftShift\" [width = \"30px\"]", 2);
+            KeyLine key3 = parser.parseKeyLine("Econ \"LeftAlt\" & \"R\"", 3);
+
+            // then
+            assertThat(key1.displayText(), equalTo("A b"));
+            assertThat(key1.keys(), contains(new KeyNameSet("H")));
+            assertThat(key1.attributes(), empty());
+
+            assertThat(key2.displayText(), equalTo("Jump"));
+            assertThat(key2.keys(), contains(new KeyNameSet("LeftShift")));
+            assertThat(key2.attributes(), contains(new Attribute("width", "30px")));
+
+            assertThat(key3.displayText(), equalTo("Econ"));
+            assertThat(key3.keys(), contains(new KeyNameSet(Set.of("LeftAlt", "R"))));
+            assertThat(key3.attributes(), empty());
+        }
+
+        @Test
+        void shouldResolveVariables() {
+            // given
+            parser.parseHeaderLine("$action = Grab", 1);
+            parser.parseHeaderLine("$small = 20", 2);
+            parser.parseHeaderLine("$medium = 30px ", 3);
+
+            // when
+            KeyLine key1 = parser.parseKeyLine("$action E [width=$small, height=$small]", 10);
+            KeyLine key2 = parser.parseKeyLine("Jump Space [width=$medium]", 11);
+
+            // then
+            assertThat(key1.displayText(), equalTo("Grab"));
+            assertThat(key1.keys(), contains(new KeyNameSet("E")));
+            assertThat(key1.attributes(), contains(new Attribute("width", "20"), new Attribute("height", "20")));
+
+            assertThat(key2.displayText(), equalTo("Jump"));
+            assertThat(key2.keys(), contains(new KeyNameSet("Space")));
+            assertThat(key2.attributes(), contains(new Attribute("width", "30px")));
+        }
+
+        @Test
+        void shouldThrowForUnexpectedAmpersand() {
+            // given / when
+            IllegalStateException ex1 = assertThrows(IllegalStateException.class,
+                () -> parser.parseKeyLine("Jmp &", 1));
+            IllegalStateException ex2 = assertThrows(IllegalStateException.class,
+                () -> parser.parseKeyLine("Jmp & A", 1));
+            IllegalStateException ex3 = assertThrows(IllegalStateException.class,
+                () -> parser.parseKeyLine("Jmp A &", 1));
+            IllegalStateException ex4 = assertThrows(IllegalStateException.class,
+                () -> parser.parseKeyLine("Jmp A & [width=20px]", 1));
+            IllegalStateException ex5 = assertThrows(IllegalStateException.class,
+                () -> parser.parseKeyLine("Jmp A & # some comment", 1));
+
+            // then
+            assertThat(ex1.getMessage(), equalTo("Unexpected '&' on line 1, column 4. Wrap complex names in double quotes"));
+            assertThat(ex2.getMessage(), equalTo("Unexpected '&' on line 1, column 4. Wrap complex names in double quotes"));
+            assertThat(ex3.getMessage(), equalTo("After ampersand, expect another key, but got end of line on line 1, column 7"));
+            assertThat(ex4.getMessage(), equalTo("After ampersand, expect another key, but got '[' on line 1, column 9"));
+            assertThat(ex5.getMessage(), equalTo("Unexpected '#' on line 1, column 8. Wrap complex names in double quotes"));
         }
     }
 }
