@@ -1,10 +1,10 @@
-width=60
-height=40
-$weapon=height=37px width=37px marginTop=3px
-$key=width=40px
+[width = 60]
+[height = 40]
+$weapon = [height=37px, width=37px, marginTop=3px]
+$key = [width=40px]
 
 Keys:
-Inv Esc width=40px
+Inv Esc [width=40px]
 1 1 $weapon
 2 2 $weapon
 3 3 $weapon
@@ -13,21 +13,21 @@ Inv Esc width=40px
 6 6 $weapon
 7 7 $weapon
 8 8 $weapon
-Roll End width=40px
+Roll End [width=40px]
 
-marginTop=0.2
-Walk S LShift RShift
-Duck G .
+[marginTop=0.2]
+Walk  S LShift RShift
+Duck  G .
 Flare A ,
 Sprint NumPad1 -
-Lstp Delete height=0.8 marginTop=0.2 marginLeft=0.2 width=40px
-↑ Up $key id=100
-Rstp PageDown height=0.8 marginTop=0.2 width=40px
+Lstp Delete [height=0.8, marginTop=0.2, marginLeft=0.2, width=40px]
+↑ Up $key [id=100]
+Rstp PageDown [height=0.8, marginTop=0.2, width=40px]
 
 Action F LCtrl RCtrl
 Jump D LAlt RAlt
 Guns Space
 Look NumPad0
-← Left $key marginLeft=0.2 id=101
-↓ Down $key id=102
-→ Right $key id=103
+← Left  $key [marginLeft=0.2, id=101]
+↓ Down  $key [id=102]
+→ Right $key [id=103]

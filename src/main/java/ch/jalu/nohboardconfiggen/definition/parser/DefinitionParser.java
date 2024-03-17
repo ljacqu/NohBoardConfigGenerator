@@ -10,6 +10,7 @@ import ch.jalu.nohboardconfiggen.definition.parser.element.Variable;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Variable.AttributeVariable;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Variable.ValueVariable;
 import com.google.common.annotations.VisibleForTesting;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,8 +21,9 @@ import java.util.Set;
 
 public class DefinitionParser {
 
-    final Map<String, String> attributeNamesToValue = new HashMap<>();
+    private final Map<String, String> attributeNamesToValue = new HashMap<>();
     final Map<String, Variable> variablesByName = new HashMap<>();
+    @Getter
     final List<KeyRow> keyRows = new ArrayList<>();
 
 
@@ -47,6 +49,12 @@ public class DefinitionParser {
         if (!currentRow.isEmpty()) {
             keyRows.add(currentRow);
         }
+    }
+
+    public List<Attribute> getAttributes() {
+        return attributeNamesToValue.entrySet().stream()
+            .map(entry -> new Attribute(entry.getKey(), entry.getValue()))
+            .toList();
     }
 
     @VisibleForTesting
@@ -167,8 +175,8 @@ public class DefinitionParser {
         char nextChar = tokenizer.peek();
         if (nextChar == '"') {
             return parseTextInDoubleQuotes(tokenizer);
-        } else if (isValidIdentifierChar(nextChar)) {
-            return tokenizer.nextAllMatching(this::isValidIdentifierChar, false);
+        } else if (isSimpleValueChar(nextChar)) {
+            return tokenizer.nextAllMatching(this::isSimpleValueChar, false);
         } else {
             if (nextChar == '&' || nextChar == '$' || nextChar == '#') {
                 throw new IllegalStateException("Unexpected '" + nextChar + "' on " + tokenizer.getLineNrColText()
@@ -191,6 +199,13 @@ public class DefinitionParser {
             || (c >= 'A' && c <= 'Z')
             || (c >= '0' && c <= '9')
             || (c == '_');
+    }
+
+    private boolean isSimpleValueChar(char c) {
+        return (c >= 'a' && c <= 'z')
+            || (c >= 'A' && c <= 'Z')
+            || (c >= '0' && c <= '9')
+            || (c == '_' || c == '.');
     }
 
     private void processAttributes(Tokenizer tokenizer) {
@@ -354,7 +369,7 @@ public class DefinitionParser {
             return parseAndResolveVariableValue(tokenizer);
         }
 
-        String value = tokenizer.nextAllMatching(this::isValidIdentifierChar, false);
+        String value = tokenizer.nextAllMatching(this::isSimpleValueChar, false);
         if (value.isEmpty()) {
             throw new IllegalStateException("Unexpected character '" + tokenizer.peek() + "' on "
                 + tokenizer.getLineNrColText() + ". Use double quotes around complex values");

@@ -1,21 +1,21 @@
-width=40
-height=40
+[width = 40]
+[height = 40]
 
 Keys:
 Inv Esc
 Save F5
 Load F6
-↑ Up marginLeft=1.2
+↑ Up [marginLeft = 1.2]
 
 LStp W
 RStp E
 Roll R
-← Left marginLeft=0.2
+← Left [marginLeft = 0.2]
 ↓ Down
 → Right
 
 Walk S
 Jmp D
 Actn F
-Guns Space marginLeft=0.2 width=1.5
-Look NumPad0 width=61px
+Guns Space   [marginLeft = 0.2, width = 1.5]
+Look NumPad0 [width = 61px]

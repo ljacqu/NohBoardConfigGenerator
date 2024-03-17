@@ -1,8 +1,13 @@
 package ch.jalu.nohboardconfiggen.definition;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 /**
  * Unit in which a distance (e.g. for margins) can be defined.
  */
+@Getter
+@RequiredArgsConstructor
 public enum Unit {
 
     KEY("k"),
@@ -11,14 +16,7 @@ public enum Unit {
 
     private final String symbol;
 
-    Unit(String symbol) {
-        this.symbol = symbol;
-    }
-
-    public static Unit fromSymbolOrDefaultIfNull(String symbol) {
-        if (symbol == null) {
-            return Unit.KEY;
-        }
+    public static Unit fromSymbol(String symbol) {
         for (Unit unit : values()) {
             if (unit.symbol.equalsIgnoreCase(symbol)) {
                 return unit;
@@ -27,5 +25,4 @@ public enum Unit {
 
         throw new IllegalStateException("Unknown unit '" + symbol + "'. Supported units: keys (k), pixels (px)");
     }
-
 }

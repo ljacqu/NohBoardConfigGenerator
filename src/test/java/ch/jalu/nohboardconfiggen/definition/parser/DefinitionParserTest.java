@@ -20,7 +20,6 @@ import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
-import static org.hamcrest.Matchers.anEmptyMap;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
@@ -47,7 +46,7 @@ class DefinitionParserTest {
             parser.parseHeaderLine(" ", 20);
 
             // then
-            assertThat(parser.attributeNamesToValue, anEmptyMap());
+            assertThat(parser.getAttributes(), empty());
         }
 
         @Test
@@ -57,7 +56,7 @@ class DefinitionParserTest {
             parser.parseHeaderLine("  # Comment", 20);
 
             // then
-            assertThat(parser.attributeNamesToValue, anEmptyMap());
+            assertThat(parser.getAttributes(), empty());
         }
 
         @Test
@@ -67,10 +66,10 @@ class DefinitionParserTest {
             parser.parseHeaderLine("[height=36px, keyboard=fr]", 20);
 
             // then
-            assertThat(parser.attributeNamesToValue, aMapWithSize(3));
-            assertThat(parser.attributeNamesToValue.get("width"), equalTo("40px"));
-            assertThat(parser.attributeNamesToValue.get("height"), equalTo("36px"));
-            assertThat(parser.attributeNamesToValue.get("keyboard"), equalTo("fr"));
+            assertThat(parser.getAttributes(), containsInAnyOrder(
+                new Attribute("width", "40px"),
+                new Attribute("height", "36px"),
+                new Attribute("keyboard", "fr")));
         }
 
         /**
@@ -83,10 +82,10 @@ class DefinitionParserTest {
             parser.parseHeaderLine("[ height= 20 , keyboard =de ]", 20);
 
             // then
-            assertThat(parser.attributeNamesToValue, aMapWithSize(3));
-            assertThat(parser.attributeNamesToValue.get("width"), equalTo("30px"));
-            assertThat(parser.attributeNamesToValue.get("height"), equalTo("20"));
-            assertThat(parser.attributeNamesToValue.get("keyboard"), equalTo("de"));
+            assertThat(parser.getAttributes(), containsInAnyOrder(
+                new Attribute("width", "30px"),
+                new Attribute("height", "20"),
+                new Attribute("keyboard", "de")));
         }
 
         @Test
@@ -96,10 +95,10 @@ class DefinitionParserTest {
                 [ keyboard="nl", width="20px", height="30" ]""", 2);
 
             // then
-            assertThat(parser.attributeNamesToValue, aMapWithSize(3));
-            assertThat(parser.attributeNamesToValue.get("keyboard"), equalTo("nl"));
-            assertThat(parser.attributeNamesToValue.get("width"), equalTo("20px"));
-            assertThat(parser.attributeNamesToValue.get("height"), equalTo("30"));
+            assertThat(parser.getAttributes(), containsInAnyOrder(
+                new Attribute("keyboard", "nl"),
+                new Attribute("width", "20px"),
+                new Attribute("height", "30")));
         }
 
         @Test
@@ -109,10 +108,10 @@ class DefinitionParserTest {
                 [ title="T\\"A", subtitle="[\\\\o=D]", hint="a,b,\\$c" ]""", 8);
 
             // then
-            assertThat(parser.attributeNamesToValue, aMapWithSize(3));
-            assertThat(parser.attributeNamesToValue.get("title"), equalTo("T\"A"));
-            assertThat(parser.attributeNamesToValue.get("subtitle"), equalTo("[\\o=D]"));
-            assertThat(parser.attributeNamesToValue.get("hint"), equalTo("a,b,$c"));
+            assertThat(parser.getAttributes(), containsInAnyOrder(
+                new Attribute("title", "T\"A"),
+                new Attribute("subtitle", "[\\o=D]"),
+                new Attribute("hint", "a,b,$c")));
         }
 
         @Test
@@ -121,22 +120,21 @@ class DefinitionParserTest {
             parser.parseHeaderLine("[ width = 20 ] # note: check this", 6);
 
             // then
-            assertThat(parser.attributeNamesToValue, aMapWithSize(1));
-            assertThat(parser.attributeNamesToValue.get("width"), equalTo("20"));
+            assertThat(parser.getAttributes(), contains(new Attribute("width", "20")));
         }
 
         @Test
         void shouldThrowForInvalidCharactersOutsideOfDoubleQuotes() {
             // given / when
             IllegalStateException ex1 = assertThrows(IllegalStateException.class,
-                () -> parser.parseHeaderLine("[title = test.toast ]", 4));
+                () -> parser.parseHeaderLine("[title = test~toast ]", 4));
             IllegalStateException ex2 = assertThrows(IllegalStateException.class,
                 () -> parser.parseHeaderLine("[ symbol = ? ]", 4));
             IllegalStateException ex3 = assertThrows(IllegalStateException.class,
                 () -> parser.parseHeaderLine("[ comma = , ]", 4));
 
             // then
-            assertThat(ex1.getMessage(), equalTo("Unexpected character '.' on line 4, column 14"));
+            assertThat(ex1.getMessage(), equalTo("Unexpected character '~' on line 4, column 14"));
             assertThat(ex2.getMessage(), equalTo("Unexpected character '?' on line 4, column 11. Use double quotes around complex values"));
             assertThat(ex3.getMessage(), equalTo("Unexpected character ',' on line 4, column 10. Use double quotes around complex values"));
         }
@@ -263,8 +261,7 @@ class DefinitionParserTest {
             parser.parseHeaderLine("[width = $width]", 2);
 
             // then
-            assertThat(parser.attributeNamesToValue, aMapWithSize(1));
-            assertThat(parser.attributeNamesToValue.get("width"), equalTo("40"));
+            assertThat(parser.getAttributes(), contains(new Attribute("width", "40")));
         }
 
         @Test
@@ -484,24 +481,24 @@ class DefinitionParserTest {
         ));
 
         // then
-        assertThat(parser.attributeNamesToValue, aMapWithSize(2));
-        assertThat(parser.attributeNamesToValue.get("width"), equalTo("35"));
-        assertThat(parser.attributeNamesToValue.get("keyboard"), equalTo("de"));
+        assertThat(parser.getAttributes(), containsInAnyOrder(
+            new Attribute("width", "35"),
+            new Attribute("keyboard", "de")));
 
-        assertThat(parser.keyRows, hasSize(3));
-        KeyRow row1 = parser.keyRows.get(0);
+        assertThat(parser.getKeyRows(), hasSize(3));
+        KeyRow row1 = parser.getKeyRows().get(0);
         assertThat(row1, hasSize(1));
         assertThat(row1.get(0), isKey("W", "ArrowUp"));
         assertThat(row1.get(0).attributes(), contains(new Attribute("marginLeft", "1k")));
 
-        KeyRow row2 = parser.keyRows.get(1);
+        KeyRow row2 = parser.getKeyRows().get(1);
         assertThat(row2, hasSize(3));
         assertThat(row2.get(0), isKey("A", "ArrowLeft"));
         assertThat(row2.get(1), isKey("S", "ArrowDown"));
         assertThat(row2.get(2), isKey("D", "ArrowRight"));
         row2.forEach(key -> assertThat(key.attributes(), empty()));
 
-        KeyRow row3 = parser.keyRows.get(2);
+        KeyRow row3 = parser.getKeyRows().get(2);
         assertThat(row3, hasSize(1));
         assertThat(row3.get(0), isKey("Jump", "Space"));
         assertThat(row3.get(0).attributes(), contains(new Attribute("width", "3")));
@@ -524,22 +521,22 @@ class DefinitionParserTest {
         ));
 
         // then
-        assertThat(parser.attributeNamesToValue, anEmptyMap());
+        assertThat(parser.getAttributes(), empty());
 
-        assertThat(parser.keyRows, hasSize(2));
-        KeyRow row1 = parser.keyRows.get(0);
+        assertThat(parser.getKeyRows(), hasSize(2));
+        KeyRow row1 = parser.getKeyRows().get(0);
         assertThat(row1, hasSize(3));
         assertThat(row1.get(0), isKey("Flashlight", "Q", "Num1"));
         assertThat(row1.get(1), isKey("Grenade", "W", "Num2"));
         assertThat(row1.get(2), isKey("Action", "E", "Num3"));
 
-        KeyRow row2 = parser.keyRows.get(1);
+        KeyRow row2 = parser.getKeyRows().get(1);
         assertThat(row2, hasSize(3));
         assertThat(row2.get(0), isKey("Jump", "A", "Num4"));
         assertThat(row2.get(1), isKey("Toggle", "S", "Num5"));
         assertThat(row2.get(2), isKey("U. D.", "D", "Num6"));
 
-        parser.keyRows.stream()
+        parser.getKeyRows().stream()
             .flatMap(row -> row.stream())
             .forEach(keyLine -> assertThat(keyLine.attributes(), empty()));
     }
@@ -565,12 +562,12 @@ class DefinitionParserTest {
         ));
 
         // then
-        assertThat(parser.attributeNamesToValue, aMapWithSize(2));
-        assertThat(parser.attributeNamesToValue.get("keyboard"), equalTo("en-us"));
-        assertThat(parser.attributeNamesToValue.get("width"), equalTo("40"));
+        assertThat(parser.getAttributes(), containsInAnyOrder(
+            new Attribute("keyboard", "en-us"),
+            new Attribute("width", "40")));
 
-        assertThat(parser.keyRows, hasSize(1));
-        KeyRow row = parser.keyRows.get(0);
+        assertThat(parser.getKeyRows(), hasSize(1));
+        KeyRow row = parser.getKeyRows().get(0);
         assertThat(row, hasSize(3));
 
         assertThat(row.get(0), isKey("$ 1", "Q"));

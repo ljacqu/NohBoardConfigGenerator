@@ -1,7 +1,7 @@
-keyboard=fr
-width=40px
-height=40px
-spacing=1px
+[keyboard = fr]
+[width = 40px]
+[height = 40px]
+[spacing = 1px]
 
 Keys:
 
@@ -11,11 +11,11 @@ Pist 1
 Shotg 2
 Eagle 3
 Uzis 4
-SMed 8 height=20px
-LMed 9 height=19px stacked=1
+SMed 8 [height = 20px]
+LMed 9 [height = 19px, stacked = true]
 
-Save F5 height=20px
-Load F6 height=19px stacked=1
+Save F5 [height = 20px]
+Load F6 [height = 19px, stacked = true]
 Dash ;
 Duck .
 Ctrl RCtrl
@@ -34,4 +34,4 @@ Roll End
 RStep PageDown
 Ctrl LCtrl
 Jump LAlt
-Guns Space width=4
+Guns Space [width = 4]
