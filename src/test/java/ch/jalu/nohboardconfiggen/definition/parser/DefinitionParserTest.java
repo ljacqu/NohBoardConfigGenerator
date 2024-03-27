@@ -400,6 +400,19 @@ class DefinitionParserTest {
         }
 
         @Test
+        void shouldParseAttribute() {
+            // given / when
+            List<Attribute> attributes1 = (List<Attribute>) parser.parseKeyLine("[width=20]", 1);
+            List<Attribute> attributes2 = (List<Attribute>) parser.parseKeyLine("[marginLeft=5px, marginTop=10]", 2);
+            List<Attribute> attributes3 = (List<Attribute>) parser.parseKeyLine("[marginLeft=5px] [ marginTop = 10]", 3);
+
+            // then
+            assertThat(attributes1, contains(new Attribute("width", "20")));
+            assertThat(attributes2, contains(new Attribute("marginLeft", "5px"), new Attribute("marginTop", "10")));
+            assertThat(attributes3, contains(new Attribute("marginLeft", "5px"), new Attribute("marginTop", "10")));
+        }
+
+        @Test
         void shouldResolveVariables() {
             // given
             parser.parseHeaderLine("$action = Grab", 1);
@@ -487,21 +500,21 @@ class DefinitionParserTest {
 
         assertThat(parser.getKeyRows(), hasSize(3));
         KeyRow row1 = parser.getKeyRows().get(0);
-        assertThat(row1, hasSize(1));
-        assertThat(row1.get(0), isKey("W", "ArrowUp"));
-        assertThat(row1.get(0).attributes(), contains(new Attribute("marginLeft", "1k")));
+        assertThat(row1.getKeys(), hasSize(1));
+        assertThat(row1.getKey(0), isKey("W", "ArrowUp"));
+        assertThat(row1.getKey(0).attributes(), contains(new Attribute("marginLeft", "1k")));
 
         KeyRow row2 = parser.getKeyRows().get(1);
-        assertThat(row2, hasSize(3));
-        assertThat(row2.get(0), isKey("A", "ArrowLeft"));
-        assertThat(row2.get(1), isKey("S", "ArrowDown"));
-        assertThat(row2.get(2), isKey("D", "ArrowRight"));
-        row2.forEach(key -> assertThat(key.attributes(), empty()));
+        assertThat(row2.getKeys(), hasSize(3));
+        assertThat(row2.getKey(0), isKey("A", "ArrowLeft"));
+        assertThat(row2.getKey(1), isKey("S", "ArrowDown"));
+        assertThat(row2.getKey(2), isKey("D", "ArrowRight"));
+        row2.getKeys().forEach(key -> assertThat(key.attributes(), empty()));
 
         KeyRow row3 = parser.getKeyRows().get(2);
-        assertThat(row3, hasSize(1));
-        assertThat(row3.get(0), isKey("Jump", "Space"));
-        assertThat(row3.get(0).attributes(), contains(new Attribute("width", "3")));
+        assertThat(row3.getKeys(), hasSize(1));
+        assertThat(row3.getKey(0), isKey("Jump", "Space"));
+        assertThat(row3.getKey(0).attributes(), contains(new Attribute("width", "3")));
     }
 
     @Test
@@ -525,19 +538,19 @@ class DefinitionParserTest {
 
         assertThat(parser.getKeyRows(), hasSize(2));
         KeyRow row1 = parser.getKeyRows().get(0);
-        assertThat(row1, hasSize(3));
-        assertThat(row1.get(0), isKey("Flashlight", "Q", "Num1"));
-        assertThat(row1.get(1), isKey("Grenade", "W", "Num2"));
-        assertThat(row1.get(2), isKey("Action", "E", "Num3"));
+        assertThat(row1.getKeys(), hasSize(3));
+        assertThat(row1.getKey(0), isKey("Flashlight", "Q", "Num1"));
+        assertThat(row1.getKey(1), isKey("Grenade", "W", "Num2"));
+        assertThat(row1.getKey(2), isKey("Action", "E", "Num3"));
 
         KeyRow row2 = parser.getKeyRows().get(1);
-        assertThat(row2, hasSize(3));
-        assertThat(row2.get(0), isKey("Jump", "A", "Num4"));
-        assertThat(row2.get(1), isKey("Toggle", "S", "Num5"));
-        assertThat(row2.get(2), isKey("U. D.", "D", "Num6"));
+        assertThat(row2.getKeys(), hasSize(3));
+        assertThat(row2.getKey(0), isKey("Jump", "A", "Num4"));
+        assertThat(row2.getKey(1), isKey("Toggle", "S", "Num5"));
+        assertThat(row2.getKey(2), isKey("U. D.", "D", "Num6"));
 
         parser.getKeyRows().stream()
-            .flatMap(row -> row.stream())
+            .flatMap(row -> row.getKeys().stream())
             .forEach(keyLine -> assertThat(keyLine.attributes(), empty()));
     }
 
@@ -568,17 +581,17 @@ class DefinitionParserTest {
 
         assertThat(parser.getKeyRows(), hasSize(1));
         KeyRow row = parser.getKeyRows().get(0);
-        assertThat(row, hasSize(3));
+        assertThat(row.getKeys(), hasSize(3));
 
-        assertThat(row.get(0), isKey("$ 1", "Q"));
-        assertThat(row.get(0).attributes(), contains(new Attribute("width", "20"), new Attribute("height", "20")));
+        assertThat(row.getKey(0), isKey("$ 1", "Q"));
+        assertThat(row.getKey(0).attributes(), contains(new Attribute("width", "20"), new Attribute("height", "20")));
 
-        assertThat(row.get(1), isKey("$ 2", "W"));
-        assertThat(row.get(1).attributes(), contains(new Attribute("width", "20"), new Attribute("height", "20"), new Attribute("marginLeft", "5px")));
+        assertThat(row.getKey(1), isKey("$ 2", "W"));
+        assertThat(row.getKey(1).attributes(), contains(new Attribute("width", "20"), new Attribute("height", "20"), new Attribute("marginLeft", "5px")));
 
-        assertThat(row.get(2).displayText(), equalTo("$ 2b"));
-        assertThat(row.get(2).keys(), contains(new KeyNameSet("W", "E")));
-        assertThat(row.get(2).attributes(), empty());
+        assertThat(row.getKey(2).displayText(), equalTo("$ 2b"));
+        assertThat(row.getKey(2).keys(), contains(new KeyNameSet("W", "E")));
+        assertThat(row.getKey(2).attributes(), empty());
     }
 
     private static Matcher<KeyLine> isKey(String displayText, String... individualKeyBinds) {

@@ -2,7 +2,6 @@ package ch.jalu.nohboardconfiggen;
 
 import ch.jalu.nohboardconfiggen.config.NohbConfiguration;
 import ch.jalu.nohboardconfiggen.config.NohboardConfigExporter;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -41,7 +40,6 @@ public class GenerationTest {
     }
 
     @Test
-    @Disabled // TODO: Support for row attributes
     void test_tr3() {
         checkTestConfigFileGeneratesExpectedJson("tr3.txt", "tr3_expected.json");
     }

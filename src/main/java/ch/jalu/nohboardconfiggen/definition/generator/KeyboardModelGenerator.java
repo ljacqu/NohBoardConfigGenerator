@@ -6,6 +6,7 @@ import ch.jalu.nohboardconfiggen.definition.KeyboardConfig;
 import ch.jalu.nohboardconfiggen.definition.KeyboardRow;
 import ch.jalu.nohboardconfiggen.definition.generator.attribute.KeyAttributes;
 import ch.jalu.nohboardconfiggen.definition.generator.attribute.KeyboardAttributes;
+import ch.jalu.nohboardconfiggen.definition.generator.attribute.RowAttributes;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Attribute;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyLine;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyNameSet;
@@ -33,11 +34,12 @@ public class KeyboardModelGenerator {
     }
 
     private KeyboardRow convertKeyboardRow(KeyRow row, KeyboardLayout keyboardLayout) {
-        List<KeyDefinition> keyModels = row.stream()
+        List<KeyDefinition> keyModels = row.getKeys().stream()
             .map(keyLine -> mapToKeyModel(keyLine, keyboardLayout))
             .toList();
 
         KeyboardRow rowModel = new KeyboardRow();
+        row.getAttributes().forEach(attr -> RowAttributes.processAttribute(rowModel, attr));
         rowModel.setKeys(keyModels);
         return rowModel;
     }

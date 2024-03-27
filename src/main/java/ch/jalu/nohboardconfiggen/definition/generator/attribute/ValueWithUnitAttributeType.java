@@ -29,7 +29,7 @@ final class ValueWithUnitAttributeType implements AttributeType<ValueWithUnit> {
     private static String extractNumberPart(String value) {
         int index = 0;
         for (char chr : value.toCharArray()) {
-            if (!Character.isDigit(chr) && chr != '.') {
+            if (!Character.isDigit(chr) && chr != '.' && chr != '-') {
                 break;
             }
             ++index;

@@ -4,7 +4,6 @@ import ch.jalu.nohboardconfiggen.definition.parser.element.Attribute;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyLine;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyNameSet;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyRow;
-import ch.jalu.nohboardconfiggen.definition.parser.element.KeyboardLineParseResult;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyboardRowEnd;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Variable;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Variable.AttributeVariable;
@@ -36,17 +35,23 @@ public class DefinitionParser {
             if (isHeaderSection) {
                 isHeaderSection = !parseHeaderLine(line, lineNumber);
             } else {
-                KeyboardLineParseResult key = parseKeyLine(line, lineNumber);
-                if (key instanceof KeyboardRowEnd && !currentRow.isEmpty()) {
-                    keyRows.add(currentRow);
-                    currentRow = new KeyRow();
-                } else if (key instanceof KeyLine keyLine) {
-                    currentRow.add(keyLine);
+                Object parseResult = parseKeyLine(line, lineNumber);
+                if (parseResult instanceof KeyboardRowEnd) {
+                    if (currentRow.hasKeys()) {
+                        keyRows.add(currentRow);
+                        currentRow = new KeyRow();
+                    }
+                } else if (parseResult instanceof KeyLine keyLine) {
+                    currentRow.addKey(keyLine);
+                } else if (parseResult instanceof List<?>) {
+                    currentRow.getAttributes().addAll((List<Attribute>) parseResult);
+                } else if (parseResult != null) {
+                    throw new IllegalStateException("Unexpected parse result of type '" + parseResult.getClass() + "'");
                 }
             }
             ++lineNumber;
         }
-        if (!currentRow.isEmpty()) {
+        if (currentRow.hasKeys()) {
             keyRows.add(currentRow);
         }
     }
@@ -82,13 +87,16 @@ public class DefinitionParser {
     }
 
     @VisibleForTesting
-    KeyboardLineParseResult parseKeyLine(String line, int lineNumber) {
+    Object parseKeyLine(String line, int lineNumber) {
         Tokenizer tokenizer = new Tokenizer(line, lineNumber);
         tokenizer.skipWhitespace();
         if (!tokenizer.hasNext()) {
             return new KeyboardRowEnd();
         } else if (tokenizer.peek() == '#') {
             return null;
+        } else if (tokenizer.peek() == '[') {
+            tokenizer.next();
+            return parseAttributeDeclaration(tokenizer);
         }
 
         String keyName;
@@ -108,7 +116,7 @@ public class DefinitionParser {
             char chr = tokenizer.peek();
             if (chr == '[') {
                 tokenizer.next();
-                attributes.addAll(parseAttributeDeclaration(tokenizer));
+                attributes.addAll(parseAttributesUntilLineEnd(tokenizer));
             } else if (chr == '#') {
                 break;
             } else if (chr == '$') {
@@ -129,6 +137,26 @@ public class DefinitionParser {
         }
 
         return new KeyLine(keyName, keys, attributes);
+    }
+
+    private List<Attribute> parseAttributesUntilLineEnd(Tokenizer tokenizer) {
+        List<Attribute> attributes = new ArrayList<>();
+        parseAttributeDeclaration(tokenizer, attributes);
+
+        do {
+            tokenizer.skipWhitespace();
+            if (tokenizer.hasNext()) {
+                char chr = tokenizer.next();
+                if (chr != '[') {
+                    throw new IllegalStateException("Expected only attributes to be declared, but found '" + chr + "' on "
+                        + tokenizer.getLineNrColText());
+                } else {
+                    parseAttributeDeclaration(tokenizer, attributes);
+                }
+            } else {
+                return attributes;
+            }
+        } while (true);
     }
 
     private String parseUnquotedKeyName(Tokenizer tokenizer) {
@@ -198,14 +226,14 @@ public class DefinitionParser {
         return (c >= 'a' && c <= 'z')
             || (c >= 'A' && c <= 'Z')
             || (c >= '0' && c <= '9')
-            || (c == '_');
+            || (c == '_' || c == '-');
     }
 
     private boolean isSimpleValueChar(char c) {
         return (c >= 'a' && c <= 'z')
             || (c >= 'A' && c <= 'Z')
             || (c >= '0' && c <= '9')
-            || (c == '_' || c == '.');
+            || (c == '_' || c == '.' || c == '-');
     }
 
     private void processAttributes(Tokenizer tokenizer) {
@@ -245,6 +273,38 @@ public class DefinitionParser {
             next = tokenizer.nextNonWhitespace();
             if (next == ']') {
                 return attributes;
+            } else if (next != ',') {
+                throw new IllegalStateException("Unexpected character '" + next
+                    + "' on " + tokenizer.getLineNrColText());
+            }
+        }
+    }
+
+    private void parseAttributeDeclaration(Tokenizer tokenizer, List<Attribute> attributes) {
+        while (true) {
+            // Get attribute name
+            String identifier = tokenizer.nextAllMatching(this::isValidIdentifierChar, true);
+            if (identifier.isEmpty()) {
+                String actual = tokenizer.hasNext() ? "'" + tokenizer.next() + "'" : "end of line";
+                throw new IllegalStateException("Expected attribute identifier ([a-zA-Z0-9_]), but got "
+                    + actual + " on " + tokenizer.getLineNrColText());
+            }
+
+            // Expect '='
+            tokenizer.expectCharAfterOptionalWhitespace('=');
+
+            // Collect value
+            tokenizer.skipWhitespace();
+            char next = tokenizer.peek();
+            String value = (next == '"')
+                ? parseTextInDoubleQuotes(tokenizer)
+                : parseSimpleText(tokenizer);
+
+            attributes.add(new Attribute(identifier, value));
+
+            next = tokenizer.nextNonWhitespace();
+            if (next == ']') {
+                return;
             } else if (next != ',') {
                 throw new IllegalStateException("Unexpected character '" + next
                     + "' on " + tokenizer.getLineNrColText());
