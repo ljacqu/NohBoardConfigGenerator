@@ -145,13 +145,13 @@ class DefinitionParserTest {
             IllegalStateException ex1 = assertThrows(IllegalStateException.class,
                 () -> parser.parseHeaderLine("[ wîdth = unset ]", 4));
             IllegalStateException ex2 = assertThrows(IllegalStateException.class,
-                () -> parser.parseHeaderLine("[ max-height = 40 ]", 4));
+                () -> parser.parseHeaderLine("[ max~height = 40 ]", 4));
             IllegalStateException ex3 = assertThrows(IllegalStateException.class,
                 () -> parser.parseHeaderLine("[ t(e)st = 30 ]", 4));
 
             // then
             assertThat(ex1.getMessage(), equalTo("Expected '=' but got 'î' on line 4, column 4"));
-            assertThat(ex2.getMessage(), equalTo("Expected '=' but got '-' on line 4, column 6"));
+            assertThat(ex2.getMessage(), equalTo("Expected '=' but got '~' on line 4, column 6"));
             assertThat(ex3.getMessage(), equalTo("Expected '=' but got '(' on line 4, column 4"));
         }
 
@@ -410,6 +410,19 @@ class DefinitionParserTest {
             assertThat(attributes1, contains(new Attribute("width", "20")));
             assertThat(attributes2, contains(new Attribute("marginLeft", "5px"), new Attribute("marginTop", "10")));
             assertThat(attributes3, contains(new Attribute("marginLeft", "5px"), new Attribute("marginTop", "10")));
+        }
+
+        @Test
+        void shouldThrowForUnexpectedContentAfterAttributes() {
+            // given / when
+            IllegalStateException ex1 = assertThrows(IllegalStateException.class, () -> parser.parseKeyLine("[width=20] A", 1));
+            IllegalStateException ex2 = assertThrows(IllegalStateException.class, () -> parser.parseKeyLine("[width=20] [keyboard=fr] &", 2));
+            IllegalStateException ex3 = assertThrows(IllegalStateException.class, () -> parser.parseKeyLine("[height=40] $var", 3));
+
+            // then
+            assertThat(ex1.getMessage(), equalTo("Expected only attributes to be declared, but found 'A' on line 1, column 12"));
+            assertThat(ex2.getMessage(), equalTo("Expected only attributes to be declared, but found '&' on line 2, column 26"));
+            assertThat(ex3.getMessage(), equalTo("Expected only attributes to be declared, but found '$' on line 3, column 13"));
         }
 
         @Test

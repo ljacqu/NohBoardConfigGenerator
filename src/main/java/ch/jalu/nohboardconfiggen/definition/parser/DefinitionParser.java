@@ -23,7 +23,7 @@ public class DefinitionParser {
     private final Map<String, String> attributeNamesToValue = new HashMap<>();
     final Map<String, Variable> variablesByName = new HashMap<>();
     @Getter
-    final List<KeyRow> keyRows = new ArrayList<>();
+    private final List<KeyRow> keyRows = new ArrayList<>();
 
 
     public void parse(List<String> lines) {
@@ -96,7 +96,7 @@ public class DefinitionParser {
             return null;
         } else if (tokenizer.peek() == '[') {
             tokenizer.next();
-            return parseAttributeDeclaration(tokenizer);
+            return parseAttributesUntilLineEnd(tokenizer);
         }
 
         String keyName;
