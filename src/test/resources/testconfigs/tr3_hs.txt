@@ -1,0 +1,35 @@
+$full = 48px
+$keySize = 24px
+[width=$full, height=$full]
+# keys has 30px if width is 40px
+$key = [width=$keySize, height=30px, marginTop=6px]
+
+Keys:
+#[marginTop=4px]
+Inv Esc
+Roll   R
+Duck   G
+1   1   $key [marginLeft=0.1]
+2   2   $key
+3   3   $key
+4   4   $key
+5   5   $key
+6   6   $key
+7   7   $key
+8   8   $key
+9   9   $key [id=209]
+0   0   $key [id=210]
+
+
+Flare  A
+Walk   S
+Jump   D
+Actn   F Enter
+↑ ArrowUp [id=100, marginLeft=1.1]
+Dash NumPad1 [marginLeft=1.1]
+
+Guns Space  [width=4]
+← ArrowLeft  [id=101, marginLeft=0.1]
+↓ ArrowDown  [id=102]
+→ ArrowRight [id=103]
+Look NumPad0 [marginLeft=0.1]

@@ -17,9 +17,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
 /**
- * Tests parsing of a config file and the creation of the NohBoard JSON.
+ * Test for {@link Generator}.
  */
-public class GenerationTest {
+public class GeneratorTest {
 
     private final NohboardConfigExporter exporter = new NohboardConfigExporter();
     private final Generator generator = new Generator();
@@ -42,6 +42,11 @@ public class GenerationTest {
     @Test
     void test_tr3() {
         checkTestConfigFileGeneratesExpectedJson("tr3.txt", "tr3_expected.json");
+    }
+
+    @Test
+    void test_tr3_hs() {
+        checkTestConfigFileGeneratesExpectedJson("tr3_hs.txt", "tr3_hs_expected.json");
     }
 
     @Test
