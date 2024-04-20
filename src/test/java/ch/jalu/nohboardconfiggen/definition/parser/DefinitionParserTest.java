@@ -5,6 +5,7 @@ import ch.jalu.nohboardconfiggen.definition.parser.element.AttributeList;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyLine;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyNameSet;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyRow;
+import ch.jalu.nohboardconfiggen.definition.parser.element.KeyboardLineParseResult;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyboardRowEnd;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Variable.AttributeVariable;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Variable.ValueVariable;
@@ -21,6 +22,7 @@ import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.aMapWithSize;
+import static org.hamcrest.Matchers.anEmptyMap;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
@@ -43,28 +45,30 @@ class DefinitionParserTest {
         @Test
         void shouldParseEmptyLine() {
             // given / when
-            parser.parseHeaderLine("", 20);
-            parser.parseHeaderLine(" ", 20);
+            parseHeaderLine("");
+            parseHeaderLine(" ");
 
             // then
             assertThat(parser.buildAttributes(), empty());
+            assertThat(parser.variablesByName, anEmptyMap());
         }
 
         @Test
         void shouldParseComment() {
             // given / when
-            parser.parseHeaderLine("# Test", 20);
-            parser.parseHeaderLine("  # Comment", 20);
+            parseHeaderLine("# Test");
+            parseHeaderLine("  # Comment");
 
             // then
             assertThat(parser.buildAttributes(), empty());
+            assertThat(parser.variablesByName, anEmptyMap());
         }
 
         @Test
         void shouldParseAttributes() {
             // given / when
-            parser.parseHeaderLine("[width=40px]", 20);
-            parser.parseHeaderLine("[height=36px, keyboard=fr]", 20);
+            parseHeaderLine("[width=40px]");
+            parseHeaderLine("[height=36px, keyboard=fr]");
 
             // then
             assertThat(parser.buildAttributes(), containsInAnyOrder(
@@ -79,8 +83,8 @@ class DefinitionParserTest {
         @Test
         void shouldParseAttributes2() {
             // given / when
-            parser.parseHeaderLine("[ width =  30px ]", 20);
-            parser.parseHeaderLine("[ height= 20 , keyboard =de ]", 20);
+            parseHeaderLine("[ width =  30px ]");
+            parseHeaderLine("[ height= 20 , keyboard =de ]");
 
             // then
             assertThat(parser.buildAttributes(), containsInAnyOrder(
@@ -92,8 +96,8 @@ class DefinitionParserTest {
         @Test
         void shouldParseAttributesWithValuesInDoubleQuotes() {
             // given / when
-            parser.parseHeaderLine("""
-                [ keyboard="nl", width="20px", height="30" ]""", 2);
+            parseHeaderLine("""
+                [ keyboard="nl", width="20px", height="30" ]""");
 
             // then
             assertThat(parser.buildAttributes(), containsInAnyOrder(
@@ -105,8 +109,8 @@ class DefinitionParserTest {
         @Test
         void shouldHandleEscapesAndNotParseSpecialCharsWithinDoubleQuotes() {
             // given / when
-            parser.parseHeaderLine("""
-                [ title="T\\"A", subtitle="[\\\\o=D]", hint="a,b,\\$c" ]""", 8);
+            parseHeaderLine("""
+                [ title="T\\"A", subtitle="[\\\\o=D]", hint="a,b,\\$c" ]""");
 
             // then
             assertThat(parser.buildAttributes(), containsInAnyOrder(
@@ -118,7 +122,7 @@ class DefinitionParserTest {
         @Test
         void shouldParseAttributeFollowedByComment() {
             // given / when
-            parser.parseHeaderLine("[ width = 20 ] # note: check this", 6);
+            parseHeaderLine("[ width = 20 ] # note: check this");
 
             // then
             assertThat(parser.buildAttributes(), contains(new Attribute("width", "20")));
@@ -128,11 +132,11 @@ class DefinitionParserTest {
         void shouldThrowForInvalidCharactersOutsideOfDoubleQuotes() {
             // given / when
             ParserException ex1 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("[title = test~toast ]", 4));
+                () -> parseHeaderLine("[title = test~toast ]", 4));
             ParserException ex2 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("[ symbol = ? ]", 4));
+                () -> parseHeaderLine("[ symbol = ? ]", 4));
             ParserException ex3 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("[ comma = , ]", 4));
+                () -> parseHeaderLine("[ comma = , ]", 4));
 
             // then
             assertThat(ex1.getMessage(), equalTo("Unexpected character '~' on line 4, column 14"));
@@ -144,11 +148,11 @@ class DefinitionParserTest {
         void shouldThrowForInvalidAttributeNameChars() {
             // given / when
             ParserException ex1 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("[ wîdth = unset ]", 4));
+                () -> parseHeaderLine("[ wîdth = unset ]", 4));
             ParserException ex2 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("[ max~height = 40 ]", 4));
+                () -> parseHeaderLine("[ max~height = 40 ]", 4));
             ParserException ex3 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("[ t(e)st = 30 ]", 4));
+                () -> parseHeaderLine("[ t(e)st = 30 ]", 4));
 
             // then
             assertThat(ex1.getMessage(), equalTo("Expected '=' but got 'î' on line 4, column 4"));
@@ -160,17 +164,17 @@ class DefinitionParserTest {
         void shouldThrowForUnexpectedEndOfLine() {
             // given / when
             ParserException ex1 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("[title = 20", 4));
+                () -> parseHeaderLine("[title = 20", 4));
             ParserException ex2 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("[title =", 4));
+                () -> parseHeaderLine("[title =", 4));
             ParserException ex3 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("[title", 4));
+                () -> parseHeaderLine("[title", 4));
             ParserException ex4 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("[", 4));
+                () -> parseHeaderLine("[", 4));
             ParserException ex5 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("[ width = 20, title = ", 4));
+                () -> parseHeaderLine("[ width = 20, title = ", 4));
             ParserException ex6 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("[ title = \"t\", ", 4));
+                () -> parseHeaderLine("[ title = \"t\", ", 4));
 
             // then
             Stream.of(ex1, ex2, ex3, ex4, ex5, ex6).forEach(ex -> {
@@ -182,7 +186,7 @@ class DefinitionParserTest {
         void shouldThrowForUnexpectedComma() {
             // given / when
             ParserException ex = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("[ , width = 20 ]", 4));
+                () -> parseHeaderLine("[ , width = 20 ]", 4));
 
             // then
             assertThat(ex.getMessage(), equalTo("Expected attribute identifier ([a-zA-Z0-9_-]), but got ',' on line 4, column 3"));
@@ -198,9 +202,9 @@ class DefinitionParserTest {
 
             // when
             ParserException ex1 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine(invalidString1, 4));
+                () -> parseHeaderLine(invalidString1, 4));
             ParserException ex2 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine(invalidString2, 4));
+                () -> parseHeaderLine(invalidString2, 4));
 
             // then
             assertThat(ex1.getMessage(), equalTo("Unexpected end of line; \" not closed on line 4"));
@@ -211,9 +215,9 @@ class DefinitionParserTest {
         void shouldThrowForUnknownEscape() {
             // given / when
             ParserException ex1 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("[title = \"te\\a\"]", 4));
+                () -> parseHeaderLine("[title = \"te\\a\"]", 4));
             ParserException ex2 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("[title = \"po \\:\"", 4));
+                () -> parseHeaderLine("[title = \"po \\:\"", 4));
 
             // then
             assertThat(ex1.getMessage(), equalTo("Unknown escape: \\a on line 4, column 14"));
@@ -223,8 +227,8 @@ class DefinitionParserTest {
         @Test
         void shouldParseValueVariable() {
             // given / when
-            parser.parseHeaderLine("$keyWidth=40", 20);
-            parser.parseHeaderLine("$keyHeight = 20px", 21);
+            parseHeaderLine("$keyWidth=40", 20);
+            parseHeaderLine("$keyHeight = 20px", 21);
 
             // then
             assertThat(parser.variablesByName, aMapWithSize(2));
@@ -235,8 +239,8 @@ class DefinitionParserTest {
         @Test
         void shouldParseAttributeVariable() {
             // given / when
-            parser.parseHeaderLine("$bigKey = [width = 60, height =  54]", 20);
-            parser.parseHeaderLine("$smallKey=[width=30px,height=28px]", 21);
+            parseHeaderLine("$bigKey = [width = 60, height =  54]", 20);
+            parseHeaderLine("$smallKey=[width=30px,height=28px]", 21);
 
             // then
             assertThat(parser.variablesByName, aMapWithSize(2));
@@ -256,10 +260,10 @@ class DefinitionParserTest {
         @Test
         void shouldParseAttributeWithVariableValue() {
             // given
-            parser.parseHeaderLine("$width = 40", 1);
+            parseHeaderLine("$width = 40");
 
             // when
-            parser.parseHeaderLine("[width = $width]", 2);
+            parseHeaderLine("[width = $width]");
 
             // then
             assertThat(parser.buildAttributes(), contains(new Attribute("width", "40")));
@@ -268,10 +272,10 @@ class DefinitionParserTest {
         @Test
         void shouldParseVariableDeclarationWithVariable() {
             // given
-            parser.parseHeaderLine("$suffix = \"You know?\"", 1);
+            parseHeaderLine("$suffix = \"You know?\"");
 
             // when
-            parser.parseHeaderLine("$statement = \"Crazy. $suffix\"", 2);
+            parseHeaderLine("$statement = \"Crazy. $suffix\"");
 
             // then
             assertThat(parser.variablesByName, aMapWithSize(2));
@@ -283,7 +287,7 @@ class DefinitionParserTest {
         void shouldThrowForEmptyVariableName() {
             // given / when
             ParserException ex = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("$ = 5", 2));
+                () -> parseHeaderLine("$ = 5", 2));
 
             // then
             assertThat(ex.getMessage(), equalTo("Expected variable identifier ([a-zA-Z0-9_-]), but got ' ' on line 2, column 2"));
@@ -293,13 +297,13 @@ class DefinitionParserTest {
         void shouldThrowForInvalidVariableAssignmentSyntax() {
             // given / when
             ParserException ex1 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("$test =", 2));
+                () -> parseHeaderLine("$test =", 2));
             ParserException ex2 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("$test = abc def", 3));
+                () -> parseHeaderLine("$test = abc def", 3));
             ParserException ex3 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("$test : 50", 4));
+                () -> parseHeaderLine("$test : 50", 4));
             ParserException ex4 = assertThrows(ParserException.class,
-                () -> parser.parseHeaderLine("$test", 5));
+                () -> parseHeaderLine("$test", 5));
 
             // then
             assertThat(ex1.getMessage(), equalTo("Unexpected end of line on line 2"));
@@ -315,18 +319,18 @@ class DefinitionParserTest {
         @Test
         void shouldProcessEmptyLineOrLineWithComment() {
             // given / when / then
-            assertThat(parser.parseKeyLine("", 1), instanceOf(KeyboardRowEnd.class));
-            assertThat(parser.parseKeyLine(" \t  ", 2), instanceOf(KeyboardRowEnd.class));
-            assertThat(parser.parseKeyLine("# test", 3), nullValue());
-            assertThat(parser.parseKeyLine("    # test", 4), nullValue());
+            assertThat(parseKeyLine("", 1), instanceOf(KeyboardRowEnd.class));
+            assertThat(parseKeyLine(" \t  ", 2), instanceOf(KeyboardRowEnd.class));
+            assertThat(parseKeyLine("# test", 3), nullValue());
+            assertThat(parseKeyLine("    # test", 4), nullValue());
         }
 
         @Test
         void shouldParseSimpleKeyDefinitions() {
             // given / when
-            KeyLine key1 = (KeyLine) parser.parseKeyLine("Jump Space", 11);
-            KeyLine key2 = (KeyLine) parser.parseKeyLine("Crouch LeftCtrl RightCtrl ", 12);
-            KeyLine key3 = (KeyLine) parser.parseKeyLine("Sprint  /  # comment", 13);
+            KeyLine key1 = (KeyLine) parseKeyLine("Jump Space");
+            KeyLine key2 = (KeyLine) parseKeyLine("Crouch LeftCtrl RightCtrl ");
+            KeyLine key3 = (KeyLine) parseKeyLine("Sprint  /  # comment");
 
             // then
             assertThat(key1.displayText(), equalTo("Jump"));
@@ -345,9 +349,9 @@ class DefinitionParserTest {
         @Test
         void shouldParseKeyDefinitionWithAttribute() {
             // given / when
-            KeyLine key1 = (KeyLine) parser.parseKeyLine("Jump Space [width = 20px]", 15);
-            KeyLine key2 = (KeyLine) parser.parseKeyLine("Crouch Ctrl [height = 40, dark = true]", 16);
-            KeyLine key3 = (KeyLine) parser.parseKeyLine("Action E [width=20][height=40px]", 16);
+            KeyLine key1 = (KeyLine) parseKeyLine("Jump Space [width = 20px]");
+            KeyLine key2 = (KeyLine) parseKeyLine("Crouch Ctrl [height = 40, dark = true]");
+            KeyLine key3 = (KeyLine) parseKeyLine("Action E [width=20][height=40px]");
 
             // then
             assertThat(key1.displayText(), equalTo("Jump"));
@@ -366,8 +370,8 @@ class DefinitionParserTest {
         @Test
         void shouldParseDefinitionWithMultipleKeys() {
             // given / when
-            KeyLine key1 = (KeyLine) parser.parseKeyLine("Econ LeftAlt & R RightAlt & R", 20);
-            KeyLine key2 = (KeyLine) parser.parseKeyLine("Grid Alt & Shift & G [color=red]", 21);
+            KeyLine key1 = (KeyLine) parseKeyLine("Econ LeftAlt & R RightAlt & R");
+            KeyLine key2 = (KeyLine) parseKeyLine("Grid Alt & Shift & G [color=red]");
 
             // then
             assertThat(key1.displayText(), equalTo("Econ"));
@@ -382,9 +386,9 @@ class DefinitionParserTest {
         @Test
         void shouldParseDefinitionWithDoubleQuotes() {
             // given / when
-            KeyLine key1 = (KeyLine) parser.parseKeyLine("\"A b\" H", 1);
-            KeyLine key2 = (KeyLine) parser.parseKeyLine("Jump  \"LeftShift\" [width = \"30px\"]", 2);
-            KeyLine key3 = (KeyLine) parser.parseKeyLine("Econ \"LeftAlt\" & \"R\"", 3);
+            KeyLine key1 = (KeyLine) parseKeyLine("\"A b\" H");
+            KeyLine key2 = (KeyLine) parseKeyLine("Jump  \"LeftShift\" [width = \"30px\"]");
+            KeyLine key3 = (KeyLine) parseKeyLine("Econ \"LeftAlt\" & \"R\"");
 
             // then
             assertThat(key1.displayText(), equalTo("A b"));
@@ -403,9 +407,9 @@ class DefinitionParserTest {
         @Test
         void shouldParseAttribute() {
             // given / when
-            AttributeList attributes1 = (AttributeList) parser.parseKeyLine("[width=20]", 1);
-            AttributeList attributes2 = (AttributeList) parser.parseKeyLine("[marginLeft=5px, marginTop=10]", 2);
-            AttributeList attributes3 = (AttributeList) parser.parseKeyLine("[marginLeft=5px] [ marginTop = 10]", 3);
+            AttributeList attributes1 = (AttributeList) parseKeyLine("[width=20]");
+            AttributeList attributes2 = (AttributeList) parseKeyLine("[marginLeft=5px, marginTop=10]");
+            AttributeList attributes3 = (AttributeList) parseKeyLine("[marginLeft=5px] [ marginTop = 10]");
 
             // then
             assertThat(attributes1.attributes(), contains(new Attribute("width", "20")));
@@ -416,9 +420,9 @@ class DefinitionParserTest {
         @Test
         void shouldThrowForUnexpectedContentAfterAttributes() {
             // given / when
-            ParserException ex1 = assertThrows(ParserException.class, () -> parser.parseKeyLine("[width=20] A", 1));
-            ParserException ex2 = assertThrows(ParserException.class, () -> parser.parseKeyLine("[width=20] [keyboard=fr] &", 2));
-            ParserException ex3 = assertThrows(ParserException.class, () -> parser.parseKeyLine("[height=40] $var", 3));
+            ParserException ex1 = assertThrows(ParserException.class, () -> parseKeyLine("[width=20] A", 1));
+            ParserException ex2 = assertThrows(ParserException.class, () -> parseKeyLine("[width=20] [keyboard=fr] &", 2));
+            ParserException ex3 = assertThrows(ParserException.class, () -> parseKeyLine("[height=40] $var", 3));
 
             // then
             assertThat(ex1.getMessage(), equalTo("Expected only attributes to be declared, but found 'A' on line 1, column 12"));
@@ -429,13 +433,13 @@ class DefinitionParserTest {
         @Test
         void shouldResolveVariables() {
             // given
-            parser.parseHeaderLine("$action = Grab", 1);
-            parser.parseHeaderLine("$small = 20", 2);
-            parser.parseHeaderLine("$medium = 30px ", 3);
+            parseHeaderLine("$action = Grab");
+            parseHeaderLine("$small = 20");
+            parseHeaderLine("$medium = 30px ");
 
             // when
-            KeyLine key1 = (KeyLine) parser.parseKeyLine("$action E [width=$small, height=$small]", 10);
-            KeyLine key2 = (KeyLine) parser.parseKeyLine("Jump Space [width=$medium]", 11);
+            KeyLine key1 = (KeyLine) parseKeyLine("$action E [width=$small, height=$small]", 10);
+            KeyLine key2 = (KeyLine) parseKeyLine("Jump Space [width=$medium]", 11);
 
             // then
             assertThat(key1.displayText(), equalTo("Grab"));
@@ -450,11 +454,11 @@ class DefinitionParserTest {
         @Test
         void shouldResolveAttributeVariables() {
             // given
-            parser.parseHeaderLine("$small = [width=20, height=20]", 1);
+            parseHeaderLine("$small = [width=20, height=20]");
 
             // when
-            KeyLine key1 = (KeyLine) parser.parseKeyLine("Action LeftCtrl $small", 1);
-            KeyLine key2 = (KeyLine) parser.parseKeyLine("Walk LeftShift $small [style=bold]", 1);
+            KeyLine key1 = (KeyLine) parseKeyLine("Action LeftCtrl $small");
+            KeyLine key2 = (KeyLine) parseKeyLine("Walk LeftShift $small [style=bold]");
 
             // then
             assertThat(key1.displayText(), equalTo("Action"));
@@ -470,15 +474,15 @@ class DefinitionParserTest {
         void shouldThrowForUnexpectedAmpersand() {
             // given / when
             ParserException ex1 = assertThrows(ParserException.class,
-                () -> parser.parseKeyLine("Jmp &", 1));
+                () -> parseKeyLine("Jmp &", 1));
             ParserException ex2 = assertThrows(ParserException.class,
-                () -> parser.parseKeyLine("Jmp & A", 1));
+                () -> parseKeyLine("Jmp & A", 1));
             ParserException ex3 = assertThrows(ParserException.class,
-                () -> parser.parseKeyLine("Jmp A &", 1));
+                () -> parseKeyLine("Jmp A &", 1));
             ParserException ex4 = assertThrows(ParserException.class,
-                () -> parser.parseKeyLine("Jmp A & [width=20px]", 1));
+                () -> parseKeyLine("Jmp A & [width=20px]", 1));
             ParserException ex5 = assertThrows(ParserException.class,
-                () -> parser.parseKeyLine("Jmp A & # some comment", 1));
+                () -> parseKeyLine("Jmp A & # some comment", 1));
 
             // then
             assertThat(ex1.getMessage(), equalTo("Unexpected '&' on line 1, column 4. Wrap complex names in double quotes"));
@@ -606,6 +610,27 @@ class DefinitionParserTest {
         assertThat(row.getKey(2).displayText(), equalTo("$ 2b"));
         assertThat(row.getKey(2).keys(), contains(new KeyNameSet("W", "E")));
         assertThat(row.getKey(2).attributes(), empty());
+    }
+
+    private void parseHeaderLine(String text) {
+        parseHeaderLine(text, 4);
+    }
+
+    private void parseHeaderLine(String text, int lineNumber) {
+        Tokenizer tokenizer = new Tokenizer(text, lineNumber);
+        parser.parseHeaderLine(tokenizer);
+        assertThat("Tokenizer should be fully consumed", tokenizer.hasNext(), equalTo(false));
+    }
+
+    private KeyboardLineParseResult parseKeyLine(String text) {
+        return parseKeyLine(text, 4);
+    }
+
+    private KeyboardLineParseResult parseKeyLine(String text, int lineNumber) {
+        Tokenizer tokenizer = new Tokenizer(text, lineNumber);
+        KeyboardLineParseResult result = parser.parseKeyLine(tokenizer);
+        assertThat("Tokenizer should be fully consumed", tokenizer.hasNext(), equalTo(false));
+        return result;
     }
 
     private static Matcher<KeyLine> isKey(String displayText, String... individualKeyBinds) {

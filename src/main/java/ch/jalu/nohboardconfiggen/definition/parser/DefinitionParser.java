@@ -29,7 +29,7 @@ public class DefinitionParser {
     private final Map<String, String> attributeNamesToValue = new HashMap<>();
     final Map<String, Variable> variablesByName = new HashMap<>();
     @Getter
-    private final List<KeyRow> keyRows = new ArrayList<>();
+    private List<KeyRow> keyRows;
 
     /**
      * Parses the given lines.
@@ -39,31 +39,25 @@ public class DefinitionParser {
     public void parse(List<String> lines) {
         int lineNumber = 1;
         boolean isHeaderSection = true;
-        KeyRow currentRow = new KeyRow();
+        RowsContainer rowsContainer = new RowsContainer();
 
         for (String line : lines) {
+            Tokenizer tokenizer = new Tokenizer(line, lineNumber);
+
             if (isHeaderSection) {
-                isHeaderSection = !parseHeaderLine(line, lineNumber);
+                isHeaderSection = !parseHeaderLine(tokenizer);
             } else {
-                KeyboardLineParseResult parseResult = parseKeyLine(line, lineNumber);
-                if (parseResult instanceof KeyboardRowEnd) {
-                    if (currentRow.hasKeys()) {
-                        keyRows.add(currentRow);
-                        currentRow = new KeyRow();
-                    }
-                } else if (parseResult instanceof KeyLine keyLine) {
-                    currentRow.addKey(keyLine);
-                } else if (parseResult instanceof AttributeList attributeList) {
-                    currentRow.getAttributes().addAll(attributeList.attributes());
-                } else if (parseResult != null) {
-                    throw new IllegalStateException("Unexpected parse result of type '" + parseResult.getClass() + "'");
-                }
+                KeyboardLineParseResult parseResult = parseKeyLine(tokenizer);
+                rowsContainer.processKeyLineResult(parseResult);
             }
+            if (tokenizer.hasNext()) {
+                throw new IllegalStateException(
+                    "Internal error: tokenizer still has values on " + tokenizer.getLineNrText());
+            }
+
             ++lineNumber;
         }
-        if (currentRow.hasKeys()) {
-            keyRows.add(currentRow);
-        }
+        keyRows = rowsContainer.build();
     }
 
     /**
@@ -81,18 +75,17 @@ public class DefinitionParser {
      * Parses the given line in the header section of the definition file (before the "Keys" section).
      * This method updates this parser's state by adding new attribute or variable data, as parsed by the line.
      *
-     * @param line the text to parse
-     * @param lineNumber the line number of this text (for error messages)
+     * @param tokenizer tokenizer with the line to parse
      * @return true if the start of the keys section was detected, false otherwise
      */
     @VisibleForTesting
-    boolean parseHeaderLine(String line, int lineNumber) {
-        Tokenizer tokenizer = new Tokenizer(line, lineNumber);
+    boolean parseHeaderLine(Tokenizer tokenizer) {
         tokenizer.skipWhitespace();
 
         if (tokenizer.hasNext()) {
             char chr = tokenizer.next();
             if (chr == '#') {
+                tokenizer.moveToEnd();
                 return false; // Comment - ignore rest
             } else if (chr == '[') {
                 processAttributes(tokenizer);
@@ -105,24 +98,22 @@ public class DefinitionParser {
                 return true;
             }
         }
-
         return false;
     }
 
     /**
      * Parses the given line in the keys section of the definition file.
      *
-     * @param line the text to parse
-     * @param lineNumber the line number of this text (for error messages)
+     * @param tokenizer tokenizer with the line to parse
      * @return result of the parse, null if there is nothing to do
      */
     @VisibleForTesting
-    KeyboardLineParseResult parseKeyLine(String line, int lineNumber) {
-        Tokenizer tokenizer = new Tokenizer(line, lineNumber);
+    KeyboardLineParseResult parseKeyLine(Tokenizer tokenizer) {
         tokenizer.skipWhitespace();
         if (!tokenizer.hasNext()) {
             return new KeyboardRowEnd();
         } else if (tokenizer.peek() == '#') {
+            tokenizer.moveToEnd();
             return null;
         } else if (tokenizer.peek() == '[') {
             tokenizer.next();
@@ -148,7 +139,7 @@ public class DefinitionParser {
                 tokenizer.next();
                 attributes.addAll(parseAttributesUntilLineEnd(tokenizer));
             } else if (chr == '#') {
-                break;
+                tokenizer.moveToEnd();
             } else if (chr == '$') {
                 tokenizer.next();
                 Variable v = variablesByName.get(extractVariableIdentifierOrThrow(tokenizer));
@@ -403,6 +394,7 @@ public class DefinitionParser {
             throw new ParserException("Expected end of line, but got '" + chr
                 + "' on " + tokenizer.getLineNrColText());
         }
+        tokenizer.moveToEnd();
     }
 
     private String parseSimpleText(Tokenizer tokenizer) {
@@ -451,5 +443,37 @@ public class DefinitionParser {
                 + actual + " on " + tokenizer.getLineNrColText());
         }
         return identifier;
+    }
+
+    private static final class RowsContainer {
+
+        private final List<KeyRow> rows = new ArrayList<>();
+        private KeyRow currentRow = new KeyRow();
+
+        void processKeyLineResult(KeyboardLineParseResult keyLineResult) {
+            if (keyLineResult instanceof KeyLine keyLine) {
+                currentRow.addKey(keyLine);
+            } else if (keyLineResult instanceof AttributeList attributeList) {
+                currentRow.getAttributes().addAll(attributeList.attributes());
+            } else if (keyLineResult instanceof KeyboardRowEnd) {
+                processKeyboardRowEnd();
+            } else if (keyLineResult != null) {
+                throw new IllegalStateException("Unexpected parse result of type '" + keyLineResult.getClass() + "'");
+            }
+        }
+
+        List<KeyRow> build() {
+            // build() is not a great name but at least drives the point home that it does something more than just
+            // return rows, since it also potentially ends the currentRow
+            processKeyboardRowEnd();
+            return rows;
+        }
+
+        private void processKeyboardRowEnd() {
+            if (currentRow.hasKeys()) {
+                rows.add(currentRow);
+                currentRow = new KeyRow();
+            }
+        }
     }
 }

@@ -145,4 +145,11 @@ class Tokenizer {
     String getLineNrColText() {
         return "line " + lineNumber + ", column " + pos;
     }
+
+    /**
+     * Moves the internal pointer of this tokenizer to the end of the line.
+     */
+    void moveToEnd() {
+        pos = chars.length;
+    }
 }
