@@ -20,6 +20,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Parses a keyboard config file. This parser is stateful, i.e. a new instance should be
+ * created for every parsing.
+ */
 public class DefinitionParser {
 
     private final Map<String, String> attributeNamesToValue = new HashMap<>();
@@ -27,7 +31,11 @@ public class DefinitionParser {
     @Getter
     private final List<KeyRow> keyRows = new ArrayList<>();
 
-
+    /**
+     * Parses the given lines.
+     *
+     * @param lines the lines to parse
+     */
     public void parse(List<String> lines) {
         int lineNumber = 1;
         boolean isHeaderSection = true;
@@ -58,12 +66,25 @@ public class DefinitionParser {
         }
     }
 
-    public List<Attribute> getAttributes() {
+    /**
+     * Returns all general attributes that were parsed.
+     *
+     * @return keyboard-level attributes
+     */
+    public List<Attribute> buildAttributes() {
         return attributeNamesToValue.entrySet().stream()
             .map(entry -> new Attribute(entry.getKey(), entry.getValue()))
             .toList();
     }
 
+    /**
+     * Parses the given line in the header section of the definition file (before the "Keys" section).
+     * This method updates this parser's state by adding new attribute or variable data, as parsed by the line.
+     *
+     * @param line the text to parse
+     * @param lineNumber the line number of this text (for error messages)
+     * @return true if the start of the keys section was detected, false otherwise
+     */
     @VisibleForTesting
     boolean parseHeaderLine(String line, int lineNumber) {
         Tokenizer tokenizer = new Tokenizer(line, lineNumber);
@@ -88,6 +109,13 @@ public class DefinitionParser {
         return false;
     }
 
+    /**
+     * Parses the given line in the keys section of the definition file.
+     *
+     * @param line the text to parse
+     * @param lineNumber the line number of this text (for error messages)
+     * @return result of the parse, null if there is nothing to do
+     */
     @VisibleForTesting
     KeyboardLineParseResult parseKeyLine(String line, int lineNumber) {
         Tokenizer tokenizer = new Tokenizer(line, lineNumber);

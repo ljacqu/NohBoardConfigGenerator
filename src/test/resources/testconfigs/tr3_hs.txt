@@ -1,11 +1,10 @@
 $full = 48px
 $keySize = 24px
 [width=$full, height=$full]
-# keys has 30px if width is 40px
 $key = [width=$keySize, height=30px, marginTop=6px]
 
 Keys:
-#[marginTop=4px]
+
 Inv Esc
 Roll   R
 Duck   G

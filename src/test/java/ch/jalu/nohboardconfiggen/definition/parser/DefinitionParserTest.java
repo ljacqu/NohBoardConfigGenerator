@@ -47,7 +47,7 @@ class DefinitionParserTest {
             parser.parseHeaderLine(" ", 20);
 
             // then
-            assertThat(parser.getAttributes(), empty());
+            assertThat(parser.buildAttributes(), empty());
         }
 
         @Test
@@ -57,7 +57,7 @@ class DefinitionParserTest {
             parser.parseHeaderLine("  # Comment", 20);
 
             // then
-            assertThat(parser.getAttributes(), empty());
+            assertThat(parser.buildAttributes(), empty());
         }
 
         @Test
@@ -67,7 +67,7 @@ class DefinitionParserTest {
             parser.parseHeaderLine("[height=36px, keyboard=fr]", 20);
 
             // then
-            assertThat(parser.getAttributes(), containsInAnyOrder(
+            assertThat(parser.buildAttributes(), containsInAnyOrder(
                 new Attribute("width", "40px"),
                 new Attribute("height", "36px"),
                 new Attribute("keyboard", "fr")));
@@ -83,7 +83,7 @@ class DefinitionParserTest {
             parser.parseHeaderLine("[ height= 20 , keyboard =de ]", 20);
 
             // then
-            assertThat(parser.getAttributes(), containsInAnyOrder(
+            assertThat(parser.buildAttributes(), containsInAnyOrder(
                 new Attribute("width", "30px"),
                 new Attribute("height", "20"),
                 new Attribute("keyboard", "de")));
@@ -96,7 +96,7 @@ class DefinitionParserTest {
                 [ keyboard="nl", width="20px", height="30" ]""", 2);
 
             // then
-            assertThat(parser.getAttributes(), containsInAnyOrder(
+            assertThat(parser.buildAttributes(), containsInAnyOrder(
                 new Attribute("keyboard", "nl"),
                 new Attribute("width", "20px"),
                 new Attribute("height", "30")));
@@ -109,7 +109,7 @@ class DefinitionParserTest {
                 [ title="T\\"A", subtitle="[\\\\o=D]", hint="a,b,\\$c" ]""", 8);
 
             // then
-            assertThat(parser.getAttributes(), containsInAnyOrder(
+            assertThat(parser.buildAttributes(), containsInAnyOrder(
                 new Attribute("title", "T\"A"),
                 new Attribute("subtitle", "[\\o=D]"),
                 new Attribute("hint", "a,b,$c")));
@@ -121,7 +121,7 @@ class DefinitionParserTest {
             parser.parseHeaderLine("[ width = 20 ] # note: check this", 6);
 
             // then
-            assertThat(parser.getAttributes(), contains(new Attribute("width", "20")));
+            assertThat(parser.buildAttributes(), contains(new Attribute("width", "20")));
         }
 
         @Test
@@ -262,7 +262,7 @@ class DefinitionParserTest {
             parser.parseHeaderLine("[width = $width]", 2);
 
             // then
-            assertThat(parser.getAttributes(), contains(new Attribute("width", "40")));
+            assertThat(parser.buildAttributes(), contains(new Attribute("width", "40")));
         }
 
         @Test
@@ -508,7 +508,7 @@ class DefinitionParserTest {
         ));
 
         // then
-        assertThat(parser.getAttributes(), containsInAnyOrder(
+        assertThat(parser.buildAttributes(), containsInAnyOrder(
             new Attribute("width", "35"),
             new Attribute("keyboard", "de")));
 
@@ -548,7 +548,7 @@ class DefinitionParserTest {
         ));
 
         // then
-        assertThat(parser.getAttributes(), empty());
+        assertThat(parser.buildAttributes(), empty());
 
         assertThat(parser.getKeyRows(), hasSize(2));
         KeyRow row1 = parser.getKeyRows().get(0);
@@ -589,7 +589,7 @@ class DefinitionParserTest {
         ));
 
         // then
-        assertThat(parser.getAttributes(), containsInAnyOrder(
+        assertThat(parser.buildAttributes(), containsInAnyOrder(
             new Attribute("keyboard", "en-us"),
             new Attribute("width", "40")));
 

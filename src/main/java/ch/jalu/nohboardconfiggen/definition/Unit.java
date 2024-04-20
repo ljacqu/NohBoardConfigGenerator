@@ -23,6 +23,6 @@ public enum Unit {
             }
         }
 
-        throw new IllegalStateException("Unknown unit '" + symbol + "'. Supported units: keys (k), pixels (px)");
+        throw new IllegalArgumentException("Unknown unit '" + symbol + "'. Supported units: keys (k), pixels (px)");
     }
 }

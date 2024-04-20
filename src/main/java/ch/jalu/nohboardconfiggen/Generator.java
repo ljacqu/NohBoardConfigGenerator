@@ -27,7 +27,7 @@ public class Generator {
         DefinitionParser parser = new DefinitionParser();
         parser.parse(lines);
 
-        KeyboardConfig keyboardModel = modelGenerator.generate(parser.getAttributes(), parser.getKeyRows());
+        KeyboardConfig keyboardModel = modelGenerator.generate(parser.buildAttributes(), parser.getKeyRows());
         NohboardConfigGenerator generator = new NohboardConfigGenerator();
         return generator.generate(keyboardModel);
     }

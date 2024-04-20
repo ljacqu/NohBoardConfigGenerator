@@ -6,6 +6,9 @@ import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 
+/**
+ * Attribute type whose result is a {@link ValueWithUnit}.
+ */
 @RequiredArgsConstructor
 final class ValueWithUnitAttributeType implements AttributeType<ValueWithUnit> {
 

@@ -2,12 +2,15 @@ package ch.jalu.nohboardconfiggen.definition.generator.attribute;
 
 import com.google.common.primitives.Ints;
 
+/**
+ * Provides simple attribute type implementations.
+ */
 final class SimpleAttributeTypes {
 
     private SimpleAttributeTypes() {
     }
 
-    public static AttributeType<Boolean> createBooleanAttributeType() {
+    static AttributeType<Boolean> createBooleanAttributeType() {
         return new AttributeType<>() {
 
             @Override
@@ -22,7 +25,7 @@ final class SimpleAttributeTypes {
         };
     }
 
-    public static AttributeType<Integer> createIntegerAttributeType() {
+    static AttributeType<Integer> createIntegerAttributeType() {
         return new AttributeType<>() {
 
             @Override
