@@ -111,7 +111,7 @@ class TokenizerTest {
         tokenizer.nextAllMatching(Character::isLetter, false);
 
         // when
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
+        ParserException ex = assertThrows(ParserException.class,
             () -> tokenizer.expectCharAfterOptionalWhitespace('='));
 
         // then
@@ -138,7 +138,7 @@ class TokenizerTest {
             Tokenizer tokenizer = createLineCharsAtEndOfLine();
 
             // when
-            IllegalStateException ex = assertThrows(IllegalStateException.class,
+            ParserException ex = assertThrows(ParserException.class,
                 tokenizer::next);
 
             // then
@@ -151,7 +151,7 @@ class TokenizerTest {
             Tokenizer tokenizer = createLineCharsAtEndOfLine();
 
             // when
-            IllegalStateException ex = assertThrows(IllegalStateException.class,
+            ParserException ex = assertThrows(ParserException.class,
                 tokenizer::peek);
 
             // then
@@ -164,7 +164,7 @@ class TokenizerTest {
             Tokenizer tokenizer = createLineCharsAtEndOfLine();
 
             // when
-            IllegalStateException ex = assertThrows(IllegalStateException.class,
+            ParserException ex = assertThrows(ParserException.class,
                 tokenizer::nextNonWhitespace);
 
             // then
@@ -178,7 +178,7 @@ class TokenizerTest {
             tokenizer.next(); // pop 'a'
 
             // when
-            IllegalStateException ex = assertThrows(IllegalStateException.class,
+            ParserException ex = assertThrows(ParserException.class,
                 tokenizer::nextNonWhitespace);
 
             // then
@@ -191,7 +191,7 @@ class TokenizerTest {
             Tokenizer tokenizer = createLineCharsAtEndOfLine();
 
             // when
-            IllegalStateException ex = assertThrows(IllegalStateException.class,
+            ParserException ex = assertThrows(ParserException.class,
                 () -> tokenizer.expectCharAfterOptionalWhitespace('}'));
 
             // then
@@ -204,7 +204,7 @@ class TokenizerTest {
             Tokenizer tokenizer = createLineCharsAtEndOfLine();
 
             // when
-            IllegalStateException ex = assertThrows(IllegalStateException.class,
+            ParserException ex = assertThrows(ParserException.class,
                 () -> tokenizer.nextAllMatching(Character::isDigit, false));
 
             // then
@@ -218,7 +218,7 @@ class TokenizerTest {
             tokenizer.next(); // pop 'a'
 
             // when
-            IllegalStateException ex = assertThrows(IllegalStateException.class,
+            ParserException ex = assertThrows(ParserException.class,
                 () -> tokenizer.expectCharAfterOptionalWhitespace(';'));
 
             // then

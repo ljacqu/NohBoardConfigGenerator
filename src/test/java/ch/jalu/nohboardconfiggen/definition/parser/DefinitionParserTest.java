@@ -1,6 +1,7 @@
 package ch.jalu.nohboardconfiggen.definition.parser;
 
 import ch.jalu.nohboardconfiggen.definition.parser.element.Attribute;
+import ch.jalu.nohboardconfiggen.definition.parser.element.AttributeList;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyLine;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyNameSet;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyRow;
@@ -126,11 +127,11 @@ class DefinitionParserTest {
         @Test
         void shouldThrowForInvalidCharactersOutsideOfDoubleQuotes() {
             // given / when
-            IllegalStateException ex1 = assertThrows(IllegalStateException.class,
+            ParserException ex1 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("[title = test~toast ]", 4));
-            IllegalStateException ex2 = assertThrows(IllegalStateException.class,
+            ParserException ex2 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("[ symbol = ? ]", 4));
-            IllegalStateException ex3 = assertThrows(IllegalStateException.class,
+            ParserException ex3 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("[ comma = , ]", 4));
 
             // then
@@ -142,11 +143,11 @@ class DefinitionParserTest {
         @Test
         void shouldThrowForInvalidAttributeNameChars() {
             // given / when
-            IllegalStateException ex1 = assertThrows(IllegalStateException.class,
+            ParserException ex1 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("[ wîdth = unset ]", 4));
-            IllegalStateException ex2 = assertThrows(IllegalStateException.class,
+            ParserException ex2 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("[ max~height = 40 ]", 4));
-            IllegalStateException ex3 = assertThrows(IllegalStateException.class,
+            ParserException ex3 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("[ t(e)st = 30 ]", 4));
 
             // then
@@ -158,17 +159,17 @@ class DefinitionParserTest {
         @Test
         void shouldThrowForUnexpectedEndOfLine() {
             // given / when
-            IllegalStateException ex1 = assertThrows(IllegalStateException.class,
+            ParserException ex1 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("[title = 20", 4));
-            IllegalStateException ex2 = assertThrows(IllegalStateException.class,
+            ParserException ex2 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("[title =", 4));
-            IllegalStateException ex3 = assertThrows(IllegalStateException.class,
+            ParserException ex3 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("[title", 4));
-            IllegalStateException ex4 = assertThrows(IllegalStateException.class,
+            ParserException ex4 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("[", 4));
-            IllegalStateException ex5 = assertThrows(IllegalStateException.class,
+            ParserException ex5 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("[ width = 20, title = ", 4));
-            IllegalStateException ex6 = assertThrows(IllegalStateException.class,
+            ParserException ex6 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("[ title = \"t\", ", 4));
 
             // then
@@ -180,11 +181,11 @@ class DefinitionParserTest {
         @Test
         void shouldThrowForUnexpectedComma() {
             // given / when
-            IllegalStateException ex = assertThrows(IllegalStateException.class,
+            ParserException ex = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("[ , width = 20 ]", 4));
 
             // then
-            assertThat(ex.getMessage(), equalTo("Expected attribute identifier ([a-zA-Z0-9_]), but got ',' on line 4, column 3"));
+            assertThat(ex.getMessage(), equalTo("Expected attribute identifier ([a-zA-Z0-9_-]), but got ',' on line 4, column 3"));
         }
 
         @Test
@@ -196,9 +197,9 @@ class DefinitionParserTest {
                 [title = "test\\"]""";
 
             // when
-            IllegalStateException ex1 = assertThrows(IllegalStateException.class,
+            ParserException ex1 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine(invalidString1, 4));
-            IllegalStateException ex2 = assertThrows(IllegalStateException.class,
+            ParserException ex2 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine(invalidString2, 4));
 
             // then
@@ -209,9 +210,9 @@ class DefinitionParserTest {
         @Test
         void shouldThrowForUnknownEscape() {
             // given / when
-            IllegalStateException ex1 = assertThrows(IllegalStateException.class,
+            ParserException ex1 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("[title = \"te\\a\"]", 4));
-            IllegalStateException ex2 = assertThrows(IllegalStateException.class,
+            ParserException ex2 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("[title = \"po \\:\"", 4));
 
             // then
@@ -281,23 +282,23 @@ class DefinitionParserTest {
         @Test
         void shouldThrowForEmptyVariableName() {
             // given / when
-            IllegalStateException ex = assertThrows(IllegalStateException.class,
+            ParserException ex = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("$ = 5", 2));
 
             // then
-            assertThat(ex.getMessage(), equalTo("Expected attribute identifier ([a-zA-Z0-9_]), but got ' ' on line 2, column 2"));
+            assertThat(ex.getMessage(), equalTo("Expected variable identifier ([a-zA-Z0-9_-]), but got ' ' on line 2, column 2"));
         }
 
         @Test
         void shouldThrowForInvalidVariableAssignmentSyntax() {
             // given / when
-            IllegalStateException ex1 = assertThrows(IllegalStateException.class,
+            ParserException ex1 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("$test =", 2));
-            IllegalStateException ex2 = assertThrows(IllegalStateException.class,
+            ParserException ex2 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("$test = abc def", 3));
-            IllegalStateException ex3 = assertThrows(IllegalStateException.class,
+            ParserException ex3 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("$test : 50", 4));
-            IllegalStateException ex4 = assertThrows(IllegalStateException.class,
+            ParserException ex4 = assertThrows(ParserException.class,
                 () -> parser.parseHeaderLine("$test", 5));
 
             // then
@@ -402,22 +403,22 @@ class DefinitionParserTest {
         @Test
         void shouldParseAttribute() {
             // given / when
-            List<Attribute> attributes1 = (List<Attribute>) parser.parseKeyLine("[width=20]", 1);
-            List<Attribute> attributes2 = (List<Attribute>) parser.parseKeyLine("[marginLeft=5px, marginTop=10]", 2);
-            List<Attribute> attributes3 = (List<Attribute>) parser.parseKeyLine("[marginLeft=5px] [ marginTop = 10]", 3);
+            AttributeList attributes1 = (AttributeList) parser.parseKeyLine("[width=20]", 1);
+            AttributeList attributes2 = (AttributeList) parser.parseKeyLine("[marginLeft=5px, marginTop=10]", 2);
+            AttributeList attributes3 = (AttributeList) parser.parseKeyLine("[marginLeft=5px] [ marginTop = 10]", 3);
 
             // then
-            assertThat(attributes1, contains(new Attribute("width", "20")));
-            assertThat(attributes2, contains(new Attribute("marginLeft", "5px"), new Attribute("marginTop", "10")));
-            assertThat(attributes3, contains(new Attribute("marginLeft", "5px"), new Attribute("marginTop", "10")));
+            assertThat(attributes1.attributes(), contains(new Attribute("width", "20")));
+            assertThat(attributes2.attributes(), contains(new Attribute("marginLeft", "5px"), new Attribute("marginTop", "10")));
+            assertThat(attributes3.attributes(), contains(new Attribute("marginLeft", "5px"), new Attribute("marginTop", "10")));
         }
 
         @Test
         void shouldThrowForUnexpectedContentAfterAttributes() {
             // given / when
-            IllegalStateException ex1 = assertThrows(IllegalStateException.class, () -> parser.parseKeyLine("[width=20] A", 1));
-            IllegalStateException ex2 = assertThrows(IllegalStateException.class, () -> parser.parseKeyLine("[width=20] [keyboard=fr] &", 2));
-            IllegalStateException ex3 = assertThrows(IllegalStateException.class, () -> parser.parseKeyLine("[height=40] $var", 3));
+            ParserException ex1 = assertThrows(ParserException.class, () -> parser.parseKeyLine("[width=20] A", 1));
+            ParserException ex2 = assertThrows(ParserException.class, () -> parser.parseKeyLine("[width=20] [keyboard=fr] &", 2));
+            ParserException ex3 = assertThrows(ParserException.class, () -> parser.parseKeyLine("[height=40] $var", 3));
 
             // then
             assertThat(ex1.getMessage(), equalTo("Expected only attributes to be declared, but found 'A' on line 1, column 12"));
@@ -468,15 +469,15 @@ class DefinitionParserTest {
         @Test
         void shouldThrowForUnexpectedAmpersand() {
             // given / when
-            IllegalStateException ex1 = assertThrows(IllegalStateException.class,
+            ParserException ex1 = assertThrows(ParserException.class,
                 () -> parser.parseKeyLine("Jmp &", 1));
-            IllegalStateException ex2 = assertThrows(IllegalStateException.class,
+            ParserException ex2 = assertThrows(ParserException.class,
                 () -> parser.parseKeyLine("Jmp & A", 1));
-            IllegalStateException ex3 = assertThrows(IllegalStateException.class,
+            ParserException ex3 = assertThrows(ParserException.class,
                 () -> parser.parseKeyLine("Jmp A &", 1));
-            IllegalStateException ex4 = assertThrows(IllegalStateException.class,
+            ParserException ex4 = assertThrows(ParserException.class,
                 () -> parser.parseKeyLine("Jmp A & [width=20px]", 1));
-            IllegalStateException ex5 = assertThrows(IllegalStateException.class,
+            ParserException ex5 = assertThrows(ParserException.class,
                 () -> parser.parseKeyLine("Jmp A & # some comment", 1));
 
             // then

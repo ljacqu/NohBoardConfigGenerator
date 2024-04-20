@@ -17,14 +17,14 @@ class Tokenizer {
         if (pos < chars.length) {
             return chars[pos];
         }
-        throw new IllegalStateException("Unexpected end of line on " + getLineNrText());
+        throw new ParserException("Unexpected end of line on " + getLineNrText());
     }
 
     char next() {
         if (pos < chars.length) {
             return chars[pos++];
         }
-        throw new IllegalStateException("Unexpected end of line on " + getLineNrText());
+        throw new ParserException("Unexpected end of line on " + getLineNrText());
     }
 
     char nextNonWhitespace() {
@@ -57,7 +57,7 @@ class Tokenizer {
         }
         int endExclusive = pos;
         if (start == endExclusive && !hasNext()) {
-            throw new IllegalStateException("Unexpected end of line on " + getLineNrText());
+            throw new ParserException("Unexpected end of line on " + getLineNrText());
         }
 
         char[] matchingChars = new char[endExclusive - start];
@@ -68,7 +68,7 @@ class Tokenizer {
     void expectCharAfterOptionalWhitespace(char expectedChar) {
         char next = nextNonWhitespace();
         if (next != expectedChar) {
-            throw new IllegalStateException("Expected '" + expectedChar + "' but got '"
+            throw new ParserException("Expected '" + expectedChar + "' but got '"
                 + next + "' on " + getLineNrColText());
         }
     }
