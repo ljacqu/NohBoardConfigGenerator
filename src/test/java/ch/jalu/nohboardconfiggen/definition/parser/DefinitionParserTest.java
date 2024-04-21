@@ -612,6 +612,38 @@ class DefinitionParserTest {
         assertThat(row.getKey(2).attributes(), empty());
     }
 
+    @Test
+    void shouldThrowForRowAttributesWithoutKeys() {
+        // given
+        List<String> definitions = List.of(
+            "Keys:",
+            "[marginTop=2]",
+            " ",
+            "A A");
+
+        // when
+        ParserException ex = assertThrows(ParserException.class, () -> parser.parse(definitions));
+
+        // then
+        assertThat(ex.getMessage(), equalTo("You have defined attributes for a keyboard row, but there are no keys. Attributes: marginTop"));
+    }
+
+    @Test
+    void shouldThrowForRowAttributesWithoutKeys2() {
+        // given
+        List<String> definitions = List.of(
+            "Keys:",
+            "A A",
+            "",
+            "[marginTop=0.4, marginLeft=0.2]");
+
+        // when
+        ParserException ex = assertThrows(ParserException.class, () -> parser.parse(definitions));
+
+        // then
+        assertThat(ex.getMessage(), equalTo("You have defined attributes for a keyboard row, but there are no keys. Attributes: marginTop, marginLeft"));
+    }
+
     private void parseHeaderLine(String text) {
         parseHeaderLine(text, 4);
     }

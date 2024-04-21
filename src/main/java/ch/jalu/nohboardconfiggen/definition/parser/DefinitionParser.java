@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Parses a keyboard config file. This parser is stateful, i.e. a new instance should be
@@ -473,6 +474,12 @@ public class DefinitionParser {
             if (currentRow.hasKeys()) {
                 rows.add(currentRow);
                 currentRow = new KeyRow();
+            } else if (!currentRow.getAttributes().isEmpty()) {
+                String attributeList = currentRow.getAttributes().stream()
+                    .map(Attribute::name)
+                    .collect(Collectors.joining(", "));
+                throw new ParserException("You have defined attributes for a keyboard row, but there are no keys. "
+                    + "Attributes: " + attributeList);
             }
         }
     }
