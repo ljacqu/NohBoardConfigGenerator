@@ -5,9 +5,12 @@ import ch.jalu.nohboardconfiggen.definition.Unit;
 import ch.jalu.nohboardconfiggen.definition.ValueWithUnit;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Attribute;
 
-public final class KeyAttributes {
+/**
+ * Converts and sets attributes to key definitions.
+ */
+public final class KeyAttributesConverter {
 
-    private KeyAttributes() {
+    private KeyAttributesConverter() {
     }
 
     public static void processAttribute(KeyDefinition keyModel, Attribute attribute) {

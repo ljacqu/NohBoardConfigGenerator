@@ -5,9 +5,12 @@ import ch.jalu.nohboardconfiggen.definition.Unit;
 import ch.jalu.nohboardconfiggen.definition.ValueWithUnit;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Attribute;
 
-public final class KeyboardAttributes {
+/**
+ * Converts and sets top-level attributes.
+ */
+public final class KeyboardAttributesConverter {
 
-    private KeyboardAttributes() {
+    private KeyboardAttributesConverter() {
     }
 
     public static void processAttribute(KeyboardConfig keyboardConfig, Attribute attribute) {

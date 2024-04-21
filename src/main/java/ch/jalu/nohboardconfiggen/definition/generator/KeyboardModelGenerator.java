@@ -4,9 +4,9 @@ import ch.jalu.nohboardconfiggen.definition.KeyBinding;
 import ch.jalu.nohboardconfiggen.definition.KeyDefinition;
 import ch.jalu.nohboardconfiggen.definition.KeyboardConfig;
 import ch.jalu.nohboardconfiggen.definition.KeyboardRow;
-import ch.jalu.nohboardconfiggen.definition.generator.attribute.KeyAttributes;
-import ch.jalu.nohboardconfiggen.definition.generator.attribute.KeyboardAttributes;
-import ch.jalu.nohboardconfiggen.definition.generator.attribute.RowAttributes;
+import ch.jalu.nohboardconfiggen.definition.generator.attribute.KeyAttributesConverter;
+import ch.jalu.nohboardconfiggen.definition.generator.attribute.KeyboardAttributesConverter;
+import ch.jalu.nohboardconfiggen.definition.generator.attribute.RowAttributesConverter;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Attribute;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyLine;
 import ch.jalu.nohboardconfiggen.definition.parser.element.KeyNameSet;
@@ -33,7 +33,7 @@ public class KeyboardModelGenerator {
      */
     public KeyboardConfig generate(List<Attribute> attributes, List<KeyRow> rows) {
         KeyboardConfig config = new KeyboardConfig();
-        attributes.forEach(attr -> KeyboardAttributes.processAttribute(config, attr));
+        attributes.forEach(attr -> KeyboardAttributesConverter.processAttribute(config, attr));
 
         KeyboardLayout keyboardLayout = getKeyboardLayout(attributes);
         List<KeyboardRow> rowModels = rows.stream()
@@ -50,7 +50,7 @@ public class KeyboardModelGenerator {
             .toList();
 
         KeyboardRow rowModel = new KeyboardRow();
-        row.getAttributes().forEach(attr -> RowAttributes.processAttribute(rowModel, attr));
+        row.getAttributes().forEach(attr -> RowAttributesConverter.processAttribute(rowModel, attr));
         rowModel.setKeys(keyModels);
         return rowModel;
     }
@@ -59,7 +59,7 @@ public class KeyboardModelGenerator {
         KeyDefinition keyModel = new KeyDefinition();
         keyModel.setText(keyLine.displayText());
         keyModel.setKeys(mapToKeyBindingModels(keyLine.keys(), keyboardLayout));
-        keyLine.attributes().forEach(attr -> KeyAttributes.processAttribute(keyModel, attr));
+        keyLine.attributes().forEach(attr -> KeyAttributesConverter.processAttribute(keyModel, attr));
         return keyModel;
     }
 

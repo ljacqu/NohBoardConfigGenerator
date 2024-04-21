@@ -5,9 +5,12 @@ import ch.jalu.nohboardconfiggen.definition.Unit;
 import ch.jalu.nohboardconfiggen.definition.ValueWithUnit;
 import ch.jalu.nohboardconfiggen.definition.parser.element.Attribute;
 
-public final class RowAttributes {
+/**
+ * Converts and sets attributes to key row definitions.
+ */
+public final class RowAttributesConverter {
 
-    private RowAttributes() {
+    private RowAttributesConverter() {
     }
 
     public static void processAttribute(KeyboardRow rowModel, Attribute attribute) {
