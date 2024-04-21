@@ -22,7 +22,7 @@ public final class RowAttributesConverter {
                 rowModel.setMarginLeft(parseNumberWithOptionalUnit(attribute));
                 break;
             default:
-                throw new IllegalArgumentException("Unknown key attribute: " + attribute.name());
+                throw new IllegalArgumentException("Unknown row attribute: " + attribute.name());
         }
     }
 

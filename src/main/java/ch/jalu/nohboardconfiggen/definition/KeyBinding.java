@@ -13,7 +13,4 @@ public class KeyBinding {
 
     private final List<Integer> codes;
 
-    public KeyBinding(int code) {
-        this.codes = List.of(code);
-    }
 }

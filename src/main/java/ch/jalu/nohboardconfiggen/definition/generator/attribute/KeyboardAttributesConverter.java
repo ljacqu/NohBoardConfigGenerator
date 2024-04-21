@@ -37,7 +37,7 @@ public final class KeyboardAttributesConverter {
         if (valueWithUnit.unit() == null || valueWithUnit.unit() == Unit.PIXEL) {
             return valueWithUnit.value().intValue();
         }
-        throw new IllegalArgumentException("Invalid value for global attribute '"
+        throw new IllegalArgumentException("Invalid value for keyboard attribute '"
             + attribute.name() + "'. Expected units in pixel, but got: " + valueWithUnit.unit().getSymbol());
     }
 }
